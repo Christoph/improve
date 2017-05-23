@@ -1,5 +1,5 @@
 {
-  "name": "contact-manager",
+  "name": "Improve-Research",
   "type": "project:application",
   "platform": {
     "id": "web",
@@ -30,8 +30,8 @@
     "source": "src/**/*.css"
   },
   "editor": {
-    "id": "vscode",
-    "displayName": "Visual Studio Code"
+    "id": "atom",
+    "displayName": "Atom"
   },
   "unitTestRunner": {
     "id": "karma",
@@ -131,6 +131,11 @@
               "name": "aurelia-computed",
               "path": "../node_modules/aurelia-computed/dist/amd",
               "main": "aurelia-computed"
+          },
+          {
+              "name": "aurelia-fetch-client",
+              "path": "../node_modules/aurelia-fetch-client/dist/amd",
+              "main": "aurelia-fetch-client"
           },
           {
               "name": "nprogress",
