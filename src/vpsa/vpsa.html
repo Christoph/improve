@@ -1,7 +1,6 @@
 <template>
-    <!-- <require from="./chart.css"></require> -->
-    <!-- <require from="../charts/bar-chart"></require> -->
-    <!-- <bar-chart data.bind="data" mo.bind="test"></bar-chart> -->
+    <require from="./chart.css"></require>
+    <require from="../charts/dynamic-bar-chart"></require>
 
     <div>
         <h2>Params </h2>
@@ -13,4 +12,9 @@
     </div>
     <button type="button" click.delegate="out()">Check</button>
 
+    <dynamic-bar-chart
+        mo.bind="test"
+        x_size=500
+        y_size=200
+        data.bind="data"></dynamic-bar-chart>
 </template>

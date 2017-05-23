@@ -3,10 +3,19 @@ import {inject, noView, bindable, bindingMode, BindingEngine} from 'aurelia-fram
 
 @inject(Element, BindingEngine)
 @noView()
-export class BarChart {
-  // External variables
-  @bindable data = [];
+export class DynamicBarChart {
+  // One-Way
+  @bindable margin = { top: 20, right: 20, bottom: 30, left: 40 };
+  @bindable x_size = 900;
+  @bindable y_size = 500;
+  @bindable x_attribute = "salesperson";
+  @bindable y_attribute = "sales";
+
+  // Two-Way
   @bindable({ defaultBindingMode: bindingMode.twoWay }) mo;
+
+  // Observed Variables
+  @bindable data = [];
 
   // Aurelia variables
   private element;
@@ -19,30 +28,28 @@ export class BarChart {
   private y;
 
   // set the dimensions and margins of the graph
-  margin = { top: 20, right: 20, bottom: 30, left: 40 };
-  width = 960 - this.margin.left - this.margin.right;
-  height = 500 - this.margin.top - this.margin.bottom;
+  private width;
+  private height;
 
   constructor(element, private bindingEngine) {
     this.element = element;
-    this.initChart()
   }
 
-  unbind() {
-    this.subscription.dispose();
-  }
+  // This is called after binding attributes
+  attached() {
+      if (this.data) {
+        // subscribe to the data array and watch for changes
+        this.subscription = this.bindingEngine
+          .collectionObserver(this.data)
+          .subscribe(splices => this.dataMutated(splices));
+      }
 
-  // This is called after creating the chart element and
-  // the data gets loaded the first time.
-  dataChanged(newList) {
-    if (this.data) {
-      // subscribe to the data array and watch for changes
-      this.subscription = this.bindingEngine
-        .collectionObserver(this.data)
-        .subscribe(splices => this.dataMutated(splices));
-    }
+      // set the dimensions and margins of the graph
+      this.width = this.x_size - this.margin.left - this.margin.right;
+      this.height = this.y_size - this.margin.top - this.margin.bottom;
 
-    this.updateChart();
+      this.initChart()
+      this.updateChart();
   }
 
   // Update the chart if the data changes
@@ -50,7 +57,9 @@ export class BarChart {
     this.updateChart();
   }
 
-
+  unbind() {
+    this.subscription.dispose();
+  }
 
   initChart() {
     // append the svg object to the chart div of the page
@@ -88,8 +97,8 @@ export class BarChart {
 
   updateChart() {
     // Update domains
-    this.x.domain(this.data.map((d) => d["salesperson"]));
-    this.y.domain([0, d3.max<any, any>(this.data, (d) => d["sales"])]);
+    this.x.domain(this.data.map((d) => d[this.x_attribute]));
+    this.y.domain([0, d3.max<any, any>(this.data, (d) => d[this.y_attribute])]);
 
     // Select chart
     let chart = this.svg.selectAll(".bar")
@@ -106,14 +115,14 @@ export class BarChart {
       .append("rect")
       .attr("class", "bar")
       .on("mouseover", (d) => {
-        this.mo = d["salesperson"];
+        this.mo = d[this.x_attribute];
 
         this.tooltip.transition()
           .duration(100)
           .style("opacity", .9);
-        this.tooltip.html(d["salesperson"])
-          .style("left", (this.x(d["salesperson"]) + this.x.bandwidth() / 2) + "px")
-          .style("top", (this.y(d["sales"]) + 60) + "px");
+        this.tooltip.html(d[this.x_attribute])
+          .style("left", (this.x(d[this.x_attribute]) + this.x.bandwidth() / 2) + "px")
+          .style("top", (this.y(d[this.y_attribute]) + 60) + "px");
       })
       .on("mouseout", (d) => {
         this.tooltip.transition()
@@ -122,10 +131,10 @@ export class BarChart {
       })
       .merge(chart)
       .attr("width", this.x.bandwidth())
-      .attr("x", (d) => this.x(d["salesperson"]))
+      .attr("x", (d) => this.x(d[this.x_attribute]))
       .transition()
-      .attr("y", (d) => this.y(d["sales"]))
-      .attr("height", (d) => this.height - this.y(d["sales"]));
+      .attr("y", (d) => this.y(d[this.y_attribute]))
+      .attr("height", (d) => this.height - this.y(d[this.y_attribute]));
 
     // Remove bars
     chart.exit().remove();
