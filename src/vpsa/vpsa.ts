@@ -1,8 +1,7 @@
 import {autoinject} from 'aurelia-framework';
-import {LocalLoader} from '../resources/sources/local-loader';
 
-// THis magic line removed the error messages for numeric
-declare var numeric:any;
+// This magic line removed the error messages for numeric
+declare var numeric: any;
 
 @autoinject
 export class Vspa {
@@ -21,25 +20,17 @@ export class Vspa {
 
     data = <any[]> []
 
-    constructor(private loader: LocalLoader) {
-        this.loader = loader;
-
-        this.model();
-    }
-
-    model() {
-        this.loader.load_file("regio.json");
-    }
-
     SIR(t, INP) {
+        let rho = 0.5
         let mu=1/(70*365.0)
         let beta=520/365.0
         let gamma=1/7.0
 
     	let Y = [0, 0 ,0]
     	let V = INP
-        Y[0] = mu - beta * V[0] * V[1] - mu * V[0]
-    	Y[1] = beta * V[0] * V[1] - gamma * V[1] - mu * V[1]
+
+        Y[0] = mu - beta * V[0] * V[1] / V.reduce((a,b) => a + b, 0) - mu * V[0]
+    	Y[1] = beta * V[0] * V[1] / V.reduce((a,b) => a + b, 0) - (gamma + mu) * V[1]/(1-rho)
     	Y[2] = gamma * V[1] - mu * V[2]
 
     	return Y
@@ -53,7 +44,8 @@ export class Vspa {
                 "x": sol.x[i],
                 "sus": sol.y[i][0],
                 "inf": sol.y[i][1],
-                "rec": sol.y[i][2]
+                "rec": sol.y[i][2],
+                "pop": sol.y[i][0] + sol.y[i][1] + sol.y[i][2]
             })
         }
     }
