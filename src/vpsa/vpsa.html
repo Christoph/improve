@@ -1,6 +1,6 @@
 <template>
     <require from="./chart.css"></require>
-    <require from="../charts/dynamic-bar-chart"></require>
+    <require from="../charts/line-chart"></require>
 
     <div>
         <h2>Params </h2>
@@ -12,9 +12,11 @@
     </div>
     <button type="button" click.delegate="out()">Check</button>
 
-    <dynamic-bar-chart
+    <line-chart
         mo.bind="test"
         x_size=500
         y_size=200
-        data.bind="data"></dynamic-bar-chart>
+        x_attribute="x"
+        y_attribute="inf"
+        data.bind="data"></line-chart>
 </template>

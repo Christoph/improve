@@ -13,17 +13,13 @@ export class Vspa {
 
     TS = 1.0
     ND = 60*365
+
     S0 = 0.1
     I0 = 1e-4
     R0 = 1 - this.S0 - this.I0
     INPUT = [this.S0, this.I0, this.R0]
 
-    data = [
-        {"salesperson" : "Bob", "sales": 12},
-        {"salesperson" : "Robin", "sales": 1},
-        {"salesperson" : "Anne", "sales": 8},
-        {"salesperson" : "Chris", "sales": 5}
-    ]
+    data = <any[]> []
 
     constructor(private loader: LocalLoader) {
         this.loader = loader;
@@ -50,8 +46,15 @@ export class Vspa {
     }
 
     out() {
-        console.log(this.loader.data);
         let sol = numeric.dopri(0, this.ND, this.INPUT, this.SIR, 1e-6, 1000);
-        console.log(sol)
+
+        for (let i = 0; i < sol.x.length; i++) {
+            this.data.push({
+                "x": sol.x[i],
+                "sus": sol.y[i][0],
+                "inf": sol.y[i][1],
+                "rec": sol.y[i][2]
+            })
+        }
     }
 }
