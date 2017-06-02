@@ -102,12 +102,15 @@ export class LineChart {
 
   updateChart() {
     // Update domains
-    this.x.domain([0, d3.max<any, any>(this.data, (d) => d[this.x_attribute])]);
-    this.y.domain([0, d3.max<any, any>(this.data, (d) => d[this.y_attribute])]);
+    let x_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.x_attribute]))
+    let y_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.y_attribute]))
+    
+    this.x.domain([0, x_max]);
+    this.y.domain([0, y_max]);
 
     // Select chart
     let chart = this.svg.selectAll(".svg")
-      .data([this.data])
+      .data(this.data)
 
     // Update axis
     this.svg.selectAll(".xAxis")
