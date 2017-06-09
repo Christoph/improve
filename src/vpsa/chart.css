@@ -22,5 +22,7 @@ div.tooltip {
 .line {
   fill: none;
   stroke: steelblue;
-  stroke-width: 2px;
+  stroke-width: 1.5px;
+  opacity: 0.1;
+  shape-rendering: crisp;
 }

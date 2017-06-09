@@ -67,15 +67,18 @@ export class Vspa {
         let params = <any[]> []
 
         // Mortality probabilty, I dies before natural death or recovery
-        let rho = [0.3, 0.4, 0.5, 0.6, 0.7]
+        // let rho = [0.3, 0.4, 0.5, 0.6, 0.7]
+        let rho = [0.4, 0.5, 0.6]
         // Per captia death rate  from natural causes
         let v = [1/(70*365.0), 1/(80*365.0), 1/(90*365.0)]
         // Population birth rate
         let mu = [1/(70*365.0), 1/(80*365.0), 1/(90*365.0)]
         // Transmission rate: I -> S. Includes encounter and transmission rate
-        let beta = [200/365.0, 365/365.0, 520/365.0]
+        // let beta = [200/365.0, 365/365.0, 520/365.0]
+        let beta = [365/365.0, 520/365.0]
         // Recovery rate
-        let gamma = [1/6.0, 1/7.0, 1/8.0]
+        // let gamma = [1/6.0, 1/7.0, 1/8.0]
+        let gamma = [1/6.0, 1/7.0]
 
         return this.cartesian([rho, v, mu, beta, gamma])
     }
