@@ -1,7 +1,68 @@
 {
-    "name": "Improve-Research",
-    "type": "project:application",
-    "platform": {
+  "name": "Improve-Research",
+  "type": "project:application",
+  "platform": {
+    "id": "web",
+    "displayName": "Web",
+    "output": "scripts",
+    "index": "index.html",
+    "baseDir": "."
+  },
+  "transpiler": {
+    "id": "typescript",
+    "displayName": "TypeScript",
+    "fileExtension": ".ts",
+    "dtsSource": [
+      "./custom_typings/**/*.d.ts"
+    ],
+    "source": "src/**/*.ts"
+  },
+  "markupProcessor": {
+    "id": "minimum",
+    "displayName": "Minimal Minification",
+    "fileExtension": ".html",
+    "source": "src/**/*.html"
+  },
+  "cssProcessor": {
+    "id": "none",
+    "displayName": "None",
+    "fileExtension": ".css",
+    "source": "src/**/*.css"
+  },
+  "editor": {
+    "id": "atom",
+    "displayName": "Atom"
+  },
+  "unitTestRunner": {
+    "id": "karma",
+    "displayName": "Karma",
+    "source": "test/unit/**/*.ts"
+  },
+  "paths": {
+    "root": "src",
+    "resources": "resources",
+    "elements": "resources/elements",
+    "attributes": "resources/attributes",
+    "valueConverters": "resources/value-converters",
+    "bindingBehaviors": "resources/binding-behaviors",
+    "assets": [
+    {
+        "src": "./node_modules/bootstrap/dist/fonts/**/*.*",
+        "dest": "./bootstrap/fonts"
+    },
+    {
+        "src": "./node_modules/bootstrap/dist/css/bootstrap.css.map",
+        "dest": "./bootstrap/css"
+    }
+    ]
+  },
+  "testFramework": {
+    "id": "jasmine",
+    "displayName": "Jasmine"
+  },
+  "build": {
+    "targets": [
+      {
         "id": "web",
         "displayName": "Web",
         "output": "scripts",
