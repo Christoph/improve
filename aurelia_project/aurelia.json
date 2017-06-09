@@ -44,7 +44,17 @@
     "elements": "resources/elements",
     "attributes": "resources/attributes",
     "valueConverters": "resources/value-converters",
-    "bindingBehaviors": "resources/binding-behaviors"
+    "bindingBehaviors": "resources/binding-behaviors",
+    "assets": [
+    {
+        "src": "./node_modules/bootstrap/dist/fonts/**/*.*",
+        "dest": "./bootstrap/fonts"
+    },
+    {
+        "src": "./node_modules/bootstrap/dist/css/bootstrap.css.map",
+        "dest": "./bootstrap/css"
+    }
+    ]
   },
   "testFramework": {
     "id": "jasmine",
