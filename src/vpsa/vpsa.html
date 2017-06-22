@@ -1,7 +1,14 @@
 <template>
     <require from="./chart.css"></require>
     <require from="../charts/line-chart"></require>
+    <require from="../charts/parallel-coordinates"></require>
 
+    <div class="row">
+        <div class="parcoords" id="parallel"  style="width:960px;height:200px;">
+
+        </div>
+        <parallel-coordinates data.bind="cars"></parallel-coordinates>
+    </div>
     <div class="row">
         <div class="col-md-4">
             <h2>Params </h2>

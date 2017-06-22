@@ -2,6 +2,7 @@ import {autoinject} from 'aurelia-framework';
 
 // This magic line removed the error messages for numeric
 declare var numeric: any;
+declare var ParCoords: any;
 
 @autoinject
 export class Vspa {
@@ -32,6 +33,13 @@ export class Vspa {
     INPUT = [this.S0, this.I0, this.R0]
 
     data = <any[]> []
+
+    cars = [
+        {"name": "A","economy (mpg)": 1,"cylinders": 1,"year": 1},
+        {"name": "A","economy (mpg)": 2,"cylinders": 2,"year": 2},
+        {"name": "B","economy (mpg)": 1,"cylinders": 2,"year": 3},
+        {"name": "C","economy (mpg)": 4,"cylinders": 2,"year": 1}
+    ]
 
     private SIR = (t, INP) => {
     	let Y = [0, 0 ,0]
@@ -84,6 +92,22 @@ export class Vspa {
     }
 
     vspa() {
+
+        // let parcoords = ParCoords()("#parallel")
+        //   .alpha(0.4)
+        //   .data([
+        //     [0,-0,0,0,0,1],
+        //     [1,-1,1,2,1,1],
+        //     [2,-2,4,4,0.5,1],
+        //     [3,-3,9,6,0.33,1],
+        //     [4,-4,16,8,0.25,1]
+        //     ])
+        //     .render()
+        //     .reorderable()
+        //     .brushMode("1D-axes")
+        //     .on("highlight", (d) => {
+        //         console.log(d)
+        //     });
 
         let params = this.get_params()
 
