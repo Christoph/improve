@@ -14,7 +14,7 @@ export class parallelCoordinates {
     @bindable y_attribute = "y";
 
     // Two-Way
-    @bindable({ defaultBindingMode: bindingMode.twoWay }) mo;
+    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing = new Map();
 
     // Observed Variables
     @bindable data = [];
@@ -103,6 +103,16 @@ export class parallelCoordinates {
           });
     }
 
+    getBrushing(g, y, brushing) {
+        g.selectAll(".brush")
+          .filter(function(d) {
+            return d3.brushSelection(this);
+          })
+          .each(function(d) {
+            brushing.set(d, [y[d].invert(d3.brushSelection(this)[1]), y[d].invert(d3.brushSelection(this)[0])])
+          });
+    }
+
     initChart() {
         // append the svg object to the chart div of the page
         // append a 'group' element to 'svg'
@@ -162,6 +172,8 @@ export class parallelCoordinates {
         let axis = this.axis;
         let foreground = this.foreground;
         let brushHighlight = this.brushHighlight;
+        let getBrushing = this.getBrushing;
+        let brushing = this.brushing;
 
         let g = this.svg.selectAll(".dimension")
             .data(this.dimensions)
@@ -197,8 +209,11 @@ export class parallelCoordinates {
                 .on("end", (d, i) => {
                     if (d3.brushSelection(this) == null) {
                         brushHighlight(g, y, foreground)
+
+                        brushing.delete(d)
                     }
 
+                    getBrushing(g, y, brushing)
                 })
             ));
             }
