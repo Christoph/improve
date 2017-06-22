@@ -25,14 +25,9 @@ export class parallelCoordinates {
 
     // D3 variables
     private svg;
-    // private tooltip;
     private x;
     private y = {};
-    private dragging = {};
     private dimensions;
-    // private actives;
-    // private brush;
-    // private brushstart;
     private line;
     private axis;
     private background;
@@ -59,6 +54,7 @@ export class parallelCoordinates {
         this.width = this.x_size - this.margin.left - this.margin.right;
         this.height = this.y_size - this.margin.top - this.margin.bottom;
 
+        // Draw the graph
         this.initChart()
         this.updateChart();
     }
@@ -68,25 +64,25 @@ export class parallelCoordinates {
         this.updateChart();
     }
 
+    // Remove the watcher after disposing the class
     unbind() {
         this.subscription.dispose();
     }
 
-    // Global d3 functions
-    position(d) {
-        var v = this.dragging[d];
-        return v == null ? this.x(d) : v;
-    }
+    // D3 functions
 
-    path(d) {
+    // Draw the lines
+    private path(d) {
         return this.line(this.dimensions.map((p) => {
-            return [this.position(p), this.y[p](d[p])]; }));
+            return [this.x(p), this.y[p](d[p])]; }));
     }
 
-    brushHighlight(g, y, foreground) {
+    // Display active lines
+    private brushHighlight(g, y, foreground) {
         let actives = [];
         let extents = [];
 
+        // Find out what is within the brushes
         g.selectAll(".brush")
           .filter(function(d) {
             return d3.brushSelection(this);
@@ -96,6 +92,7 @@ export class parallelCoordinates {
             extents.push([y[d].invert(d3.brushSelection(this)[1]), y[d].invert(d3.brushSelection(this)[0])])
           });
 
+          // Bring brushed lines into foreground
           foreground.style("display", function(d) {
               return actives.every(function(p, i) {
                 return extents[i][0] <= d[p] && d[p] <= extents[i][1];
@@ -103,7 +100,8 @@ export class parallelCoordinates {
           });
     }
 
-    getBrushing(g, y, brushing) {
+    // Update external variables with current brushes
+    private getBrushing(g, y, brushing) {
         g.selectAll(".brush")
           .filter(function(d) {
             return d3.brushSelection(this);
@@ -125,20 +123,23 @@ export class parallelCoordinates {
             .attr("transform",
             "translate(" + this.margin.left + "," + this.margin.top + ")");
 
-        // set the ranges
+        // set the x range
         this.x = d3.scalePoint()
             .range([0, this.width]);
 
+        // Basic initialization
         this.axis = d3.axisLeft()
         this.line = d3.line();
     }
 
     updateChart() {
-
+        // Get current dataset dimensions: Keys of the map
         this.dimensions = d3.keys(this.data[0]).filter((d) => {
             return d != "name"
         });
 
+        // Create corresponding y axis
+        // Currently only linear values
         this.dimensions.map((dim) => {
             this.y[dim] = d3.scaleLinear()
                     .range([this.height, 0])
@@ -147,6 +148,7 @@ export class parallelCoordinates {
                     }))
         });
 
+        // Create the x axis
         this.x.domain(this.dimensions);
 
         // Add grey background lines for context.
@@ -166,6 +168,7 @@ export class parallelCoordinates {
             .attr("d", (d) => { return this.path(d)});
 
         // Create local versions of class variables
+        // This is necessary due to the nature of TS and D3
         let height = this.height;
         let x = this.x;
         let y = this.y;
@@ -175,6 +178,7 @@ export class parallelCoordinates {
         let getBrushing = this.getBrushing;
         let brushing = this.brushing;
 
+        // Create drawing area
         let g = this.svg.selectAll(".dimension")
             .data(this.dimensions)
           .enter().append("g")
@@ -182,10 +186,12 @@ export class parallelCoordinates {
             .attr("transform", (d) => {
                 return "translate(" + x(d) + ")"; });
 
+        // Add axis
         g.append("g")
             .each(function(d) {
                  d3.select(this).call(axis.scale(y[d])););
 
+        // Add tiltes for the axis
         g.append("text")
             .style("text-anchor", "middle")
             .attr("y", -9)
@@ -194,6 +200,11 @@ export class parallelCoordinates {
         // Add and store a brush for each axis.
         g.append("g")
             .attr("class", "brush")
+            // This part is very important!
+            // function(d) is used instead of (d) =>
+            // The reason is that within function(d) this is the element
+            // and this within (d) => is the TS class which means you need a local version of class variables
+            // for everything used within function(d)
             .each(function(d) {
                  d3.select(this).call(d3.brushY()
                 .extent([[-9,0], [9, height]])
@@ -207,6 +218,7 @@ export class parallelCoordinates {
                     brushHighlight(g, y, foreground)
                 })
                 .on("end", (d, i) => {
+                    // Check if brush was removed
                     if (d3.brushSelection(this) == null) {
                         brushHighlight(g, y, foreground)
 
