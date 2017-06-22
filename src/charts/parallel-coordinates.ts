@@ -83,8 +83,24 @@ export class parallelCoordinates {
             return [this.position(p), this.y[p](d[p])]; }));
     }
 
-    transition(g) {
-        return g.transition().duration(500)
+    brushHighlight(g, y, foreground) {
+        let actives = [];
+        let extents = [];
+
+        g.selectAll(".brush")
+          .filter(function(d) {
+            return d3.brushSelection(this);
+          })
+          .each(function(d) {
+            actives.push(d)
+            extents.push([y[d].invert(d3.brushSelection(this)[1]), y[d].invert(d3.brushSelection(this)[0])])
+          });
+
+          foreground.style("display", function(d) {
+              return actives.every(function(p, i) {
+                return extents[i][0] <= d[p] && d[p] <= extents[i][1];
+              }) ? null : "none";
+          });
     }
 
     initChart() {
@@ -100,35 +116,11 @@ export class parallelCoordinates {
             "translate(" + this.margin.left + "," + this.margin.top + ")");
 
         // set the ranges
-        this.x = d3.scaleBand()
+        this.x = d3.scalePoint()
             .range([0, this.width]);
 
         this.axis = d3.axisLeft()
         this.line = d3.line();
-
-        // add the x Axis
-        // this.svg.append("g")
-        //     .attr("transform", "translate(0," + this.height + ")")
-        //     .attr("class", "xAxis");
-        //
-        // // add the y Axis
-        // this.svg.append("g")
-        //     .attr("class", "yAxis");
-
-        // this.brushstart = function() {
-        //   d3.event.sourceEvent.stopPropagation();
-        // }
-        //
-        // this.brush = function() {
-        //   this.actives = this.dimensions.filter((p) => { return !this.y[p].brush.empty(); }),
-        //       extents = actives.map((p) => { return this.y[p].brush.extent(); });
-        //   this.foreground.style("display", function(d) {
-        //     return actives.every((p, i) => {
-        //       return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-        //     }) ? null : "none";
-        //   });
-        // }
-
     }
 
     updateChart() {
@@ -164,9 +156,12 @@ export class parallelCoordinates {
             .attr("d", (d) => { return this.path(d)});
 
         // Create local versions of class variables
+        let height = this.height;
         let x = this.x;
-        let axis = this.axis;
         let y = this.y;
+        let axis = this.axis;
+        let foreground = this.foreground;
+        let brushHighlight = this.brushHighlight;
 
         let g = this.svg.selectAll(".dimension")
             .data(this.dimensions)
@@ -174,54 +169,39 @@ export class parallelCoordinates {
             .attr("class", "dimension")
             .attr("transform", (d) => {
                 return "translate(" + x(d) + ")"; });
-            // .call(d3.behavior.drag()
-            //   .origin((d) => { return {x: this.x(d)}; })
-            //   .on("dragstart", (d) => {
-            //     this.dragging[d] = this.x(d);
-            //     this.background.attr("visibility", "hidden");
-            // })
-            //   .on("drag", (d) => {
-            //     this.dragging[d] = Math.min(width, Math.max(0, d3.event.x));
-            //     this.foreground.attr("d", this.path);
-            //     dimensions.sort(function(a, b) { return position(a) - position(b); });
-            //     this.x.domain(this.dimensions);
-            //     g.attr("transform", (d) => { return "translate(" + this.position(d) + ")"; })
-            //   })
-            //   .on("dragend", (d) => {
-            //     delete this.dragging[d];
-            //     this.transition(d3.select(this)).attr("transform", "translate(" + this.x(d) + ")");
-            //     this.transition(this.foreground).attr("d", this.path);
-            //     this.background
-            //         .attr("d", this.path)
-            //       .transition()
-            //         .delay(500)
-            //         .duration(0)
-            //         .attr("visibility", null);
-            //   }));
 
-        // Add an axis and title.
         g.append("g")
-            .attr("class", "axis")
             .each(function(d) {
-                 d3.select(this).call(axis.scale(y[d])); })
-          .append("text")
+                 d3.select(this).call(axis.scale(y[d])););
+
+        g.append("text")
             .style("text-anchor", "middle")
             .attr("y", -9)
             .text((d) => { return d; });
 
         // Add and store a brush for each axis.
-        // g.append("g")
-        //     .attr("class", "brush")
-        //     .each((d) => {
-        //       d3.select(this).call(this.y[d].brush = d3.svg.brush().y(this.y[d]).on("brushstart", this.brushstart).on("brush", this.brush));
-        //     })
-        //   .selectAll("rect")
-        //     .attr("x", -8)
-        //     .attr("width", 16);
+        g.append("g")
+            .attr("class", "brush")
+            .each(function(d) {
+                 d3.select(this).call(d3.brushY()
+                .extent([[-9,0], [9, height]])
+                 .on("start", (d, i) => {
+                     d3.event.sourceEvent.stopPropagation();
+                 })
+                 .on("brush", (d, i) => {
+                     if (!d3.event.sourceEvent) return; // Only transition after input.
+                    if (!d3.event.selection) return; // Ignore empty selections.
 
+                    brushHighlight(g, y, foreground)
+                })
+                .on("end", (d, i) => {
+                    if (d3.brushSelection(this) == null) {
+                        brushHighlight(g, y, foreground)
+                    }
 
+                })
+            ));
+            }
+        }
     }
-
-
-
 }
