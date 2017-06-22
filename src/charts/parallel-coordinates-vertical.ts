@@ -128,8 +128,9 @@ export class parallelCoordinatesVertical {
             .range([0, this.height]);
 
         // Basic initialization
-        this.axis = d3.axisTop()
-        this.line = d3.line();
+        this.axis = d3.axisTop();
+        this.line = d3.line()
+        .curve(d3.curveMonotoneY);
     }
 
     updateChart() {

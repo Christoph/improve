@@ -129,7 +129,8 @@ export class parallelCoordinates {
 
         // Basic initialization
         this.axis = d3.axisLeft()
-        this.line = d3.line();
+        this.line = d3.line()
+        .curve(d3.curveMonotoneY);
     }
 
     updateChart() {
