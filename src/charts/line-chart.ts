@@ -5,9 +5,7 @@ import {inject, noView, bindable, bindingMode, BindingEngine} from 'aurelia-fram
 @noView()
 export class LineChart {
   // One-Way
-  @bindable margin = { top: 20, right: 20, bottom: 30, left: 60 };
-  @bindable x_size = 900;
-  @bindable y_size = 500;
+  @bindable margin = { top: 20, right: 20, bottom: 35, left: 60 };
   @bindable x_attribute = "x";
   @bindable y_attribute = "y";
 
@@ -30,6 +28,8 @@ export class LineChart {
   // set the dimensions and margins of the graph
   private width;
   private height;
+  private x_size = 900;
+  private y_size = 500;
 
   constructor(element, private bindingEngine) {
     this.element = element;
@@ -45,6 +45,9 @@ export class LineChart {
       }
 
       // set the dimensions and margins of the graph
+      this.x_size = this.element.parentElement.offsetWidth
+      this.y_size = this.element.parentElement.offsetHeight
+
       this.width = this.x_size - this.margin.left - this.margin.right;
       this.height = this.y_size - this.margin.top - this.margin.bottom;
 
@@ -87,9 +90,9 @@ export class LineChart {
       // x axis label
       this.svg.append("text")
           .style("text-anchor", "middle")
-          .attr("y", this.height+25)
+          .attr("y", this.height+26)
           .attr("x", this.width/2)
-          .text("Days");
+          .text("days");
 
     // add the y Axis
     this.svg.append("g")
@@ -98,9 +101,7 @@ export class LineChart {
       // y axis label
     this.svg.append("text")
         .style("text-anchor", "middle")
-        .attr("y", -20)
-        .attr("x", -this.height/2)
-        .attr("transform", "rotate(-90)")
+        .attr("y", -4)
         .text((d) => { return this.y_attribute}));
 
     // define the line
