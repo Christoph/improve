@@ -7,11 +7,7 @@ declare var ParCoords: any;
 @noView()
 export class parallelCoordinatesVertical {
     // One-Way
-    @bindable margin = { top: 20, right: 20, bottom: 30, left: 40 };
-    @bindable x_size = 900;
-    @bindable y_size = 500;
-    @bindable x_attribute = "x";
-    @bindable y_attribute = "y";
+    @bindable margin = { top: 60, right: 20, bottom: 30, left: 40 };
 
     // Two-Way
     @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing = new Map();
@@ -34,6 +30,8 @@ export class parallelCoordinatesVertical {
     private foreground;
 
     // set the dimensions and margins of the graph
+    private x_size = 500;
+    private y_size = 500;
     private width;
     private height;
 
@@ -51,6 +49,9 @@ export class parallelCoordinatesVertical {
         }
 
         // set the dimensions and margins of the graph
+        this.x_size = this.element.parentElement.offsetWidth
+        this.y_size = this.element.parentElement.offsetHeight
+
         this.width = this.x_size - this.margin.left - this.margin.right;
         this.height = this.y_size - this.margin.top - this.margin.bottom;
 

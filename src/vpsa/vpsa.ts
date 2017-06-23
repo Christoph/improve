@@ -11,6 +11,8 @@ export class Vspa {
     param2 = 1;
 
 
+    outer_element = this.parcoord;
+
     // SIR Model
     TS = 1.0
     ND = 60*365
