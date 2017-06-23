@@ -143,11 +143,18 @@ export class parallelCoordinatesVertical {
         // Create corresponding y axis
         // Currently only linear values
         this.dimensions.map((dim) => {
+            let ext = d3.extent(this.data, (data) => {
+                return data[dim];
+            })
+
+            if(ext[0] == ext[1]) {
+                ext[0] -= ext[0]*0.1;
+                ext[1] += ext[1]*0.1;
+            }
+
             this.x[dim] = d3.scaleLinear()
                     .range([this.width, 0])
-                    .domain(d3.extent(this.data, (data) => {
-                        return data[dim];
-                    }))
+                    .domain(ext)
         });
 
         // Create the x axis
