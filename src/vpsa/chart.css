@@ -31,3 +31,8 @@
   stroke: steelblue;
   stroke-width: 2px;
 }
+
+.focus_element {
+  fill: steelblue;
+  opacity: 0.1;
+}

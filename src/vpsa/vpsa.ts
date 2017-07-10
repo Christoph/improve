@@ -69,17 +69,17 @@ export class Vspa {
 
         // Mortality probabilty, I dies before natural death or recovery
         // let rho = [0.3, 0.4, 0.5, 0.6, 0.7]
-        let rho = [0.4, 0.7]
+        let rho = [0.4, 0.5, 0.7]
         // Per captia death rate  from natural causes
-        let v = [1/(70*365.0)]
+        let v = [1/(60*365.0), 1/(70*365.0), 1/(75*365.0)]
         // Population birth rate
-        let mu = [1/(70*365.0)]
+        let mu = [1/(70*365.0),1/(65*365.0), 1/(60*365.0)]
         // Transmission rate: I -> S. Includes encounter and transmission rate
         // let beta = [200/365.0, 365/365.0, 520/365.0]
-        let beta = [520/365.0]
+        let beta = [400/365.0, 520/365.0, 600/365.0]
         // Recovery rate
         // let gamma = [1/6.0, 1/7.0, 1/8.0]
-        let gamma = [1/6.0]
+        let gamma = [1/6.0, 1/7.0, 1/8.0]
 
         return this.cartesian([rho, v, mu, beta, gamma])
     }
@@ -91,7 +91,7 @@ export class Vspa {
         this.INPUT = [+this.S0, +this.I0, +this.R0]
 
         let params = this.get_params()
-        let time_range = []
+        let time_range = <any[]> []
 
         for (let i = 0; i < this.ND; i++) {
             time_range.push(i)
