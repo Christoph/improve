@@ -114,9 +114,11 @@ export class LineChart {
     // Update domains
     let x_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.x_attribute]))
     let y_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.y_attribute]))
+    let x_min = d3.min(this.data, (array) => d3.min<any, any>(array, (d) => d[this.x_attribute]))
+    let y_min = d3.min(this.data, (array) => d3.min<any, any>(array, (d) => d[this.y_attribute]))
 
-    this.x.domain([0, x_max]);
-    this.y.domain([0, y_max]);
+    this.x.domain([x_min, x_max]);
+    this.y.domain([y_min, y_max]);
 
     // Select chart
     let chart = this.svg.selectAll(".svg")
