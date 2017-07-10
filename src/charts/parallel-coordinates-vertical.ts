@@ -25,7 +25,6 @@ export class parallelCoordinatesVertical {
     private y;
     private dimensions;
     private line;
-    private axis;
     private background;
     private foreground;
 
@@ -80,17 +79,22 @@ export class parallelCoordinatesVertical {
 
     // Display active lines
     private brushHighlight(g, x, foreground) {
-        let actives = [];
-        let extents = [];
+        let actives = <any>[];
+        let extents = <any>[];
 
         // Find out what is within the brushes
         g.selectAll(".brush")
-          .filter(function(d) {
+          .filter(function(this, d) {
             return d3.brushSelection(this);
           })
-          .each(function(d) {
-            actives.push(d)
-            extents.push([x[d].invert(d3.brushSelection(this)[1]), x[d].invert(d3.brushSelection(this)[0])])
+          .each(function(this, d) {
+            let brush_selection =  d3.brushSelection(this)
+
+            if(brush_selection != null)
+            {
+                actives.push(d)
+                extents.push([x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])])
+            }
           });
 
           // Bring brushed lines into foreground
@@ -104,11 +108,16 @@ export class parallelCoordinatesVertical {
     // Update external variables with current brushes
     private getBrushing(g, x, brushing) {
         g.selectAll(".brush")
-          .filter(function(d) {
+          .filter(function(this, d) {
             return d3.brushSelection(this);
           })
-          .each(function(d) {
-            brushing.set(d, [x[d].invert(d3.brushSelection(this)[1]), x[d].invert(d3.brushSelection(this)[0])])
+          .each(function(this, d) {
+              let brush_selection =  d3.brushSelection(this)
+
+              if(brush_selection != null){
+                brushing.set(d, [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])])
+            }
+
           });
     }
 
@@ -129,7 +138,6 @@ export class parallelCoordinatesVertical {
             .range([0, this.height]);
 
         // Basic initialization
-        this.axis = d3.axisTop();
         this.line = d3.line()
         .curve(d3.curveMonotoneY);
     }
@@ -143,7 +151,7 @@ export class parallelCoordinatesVertical {
         // Create corresponding y axis
         // Currently only linear values
         this.dimensions.map((dim) => {
-            let ext = d3.extent(this.data, (data) => {
+            let ext = <any> d3.extent(this.data, (data) => {
                 return data[dim];
             })
 
@@ -182,7 +190,6 @@ export class parallelCoordinatesVertical {
         let width = this.width;
         let x = this.x;
         let y = this.y;
-        let axis = this.axis;
         let foreground = this.foreground;
         let brushHighlight = this.brushHighlight;
         let getBrushing = this.getBrushing;
@@ -198,8 +205,9 @@ export class parallelCoordinatesVertical {
 
         // Add axis
         g.append("g")
-            .each(function(d) {
-                 d3.select(this).call(axis.scale(x[d])););
+            .each(function(this, d) {
+                 d3.select(this).call(d3.axisTop(x[d]));
+             });
 
         // Add tiltes for the axis
         g.append("text")
@@ -216,7 +224,7 @@ export class parallelCoordinatesVertical {
             // The reason is that within function(d) this is the element
             // and this within (d) => is the TS class which means you need a local version of class variables
             // for everything used within function(d)
-            .each(function(d) {
+            .each(function(this, d) {
                  d3.select(this).call(d3.brushX()
                 .extent([[0, -9], [width, 9]])
                  .on("start", (d, i) => {
@@ -238,8 +246,7 @@ export class parallelCoordinatesVertical {
 
                     getBrushing(g, x, brushing)
                 })
-            ));
-            }
-        }
+            );
+        })
     }
 }
