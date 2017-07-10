@@ -102,7 +102,7 @@ export class LineChart {
     this.svg.append("text")
         .style("text-anchor", "middle")
         .attr("y", -4)
-        .text((d) => { return this.y_attribute}));
+        .text((d) => { return this.y_attribute});
 
     // define the line
     this.valueline = d3.line()
