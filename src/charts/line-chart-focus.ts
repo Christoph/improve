@@ -94,12 +94,12 @@ export class LineChartFocus {
         .attr("width", this.lc_width)
         .attr("height", this.lc_height)
         .attr("transform",
-        "translate(" + this.margin.left + ", 0)");
+        "translate(" + this.margin.left + ", "+ this.margin.top +")");
 
     this.focus = this.svg
         .append("g")
         .attr("transform",
-        "translate(" + this.focus_offset + ", 0)");
+        "translate(" + this.focus_offset + ", "+ this.margin.top +")");
 
     // set the ranges
     this.x = d3.scaleLinear()
