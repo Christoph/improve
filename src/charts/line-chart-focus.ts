@@ -213,21 +213,6 @@ export class LineChartFocus {
     chart.enter()
       .append("path")
       .attr("class", "line")
-    //   .on("mouseover", (d) => {
-    //     this.mo = d[this.x_attribute];
-      //
-    //     this.tooltip.transition()
-    //       .duration(100)
-    //       .style("opacity", .9);
-    //     this.tooltip.html(d[this.x_attribute])
-    //       .style("left", (this.x(d[this.x_attribute]) + this.x.bandwidth() / 2) + "px")
-    //       .style("top", (this.y(d[this.y_attribute]) + 60) + "px");
-    //   })
-    //   .on("mouseout", (d) => {
-    //     this.tooltip.transition()
-    //       .duration(500)
-    //       .style("opacity", 0);
-    //   })
       .merge(chart)
       .attr("d", (d) => this.valueline(d));
 
@@ -239,11 +224,14 @@ export class LineChartFocus {
     focus_chart.enter()
       .append("rect")
       .attr("class", "bar")
+    //   .on("click", function(d) {
+    //     console.log(d)
+    //   })
       .merge(focus_chart)
       .attr("x", 1)
       .attr("transform", (d) => {
 		  return "translate(0," + this.focus_y(d.x1) + ")"; })
-      .attr("width", (d) => { return this.focus_width - this.focus_x(d.length); })
+      .attr("width", (d) => { return  this.focus_x(d.length); })
       .attr("height", (d) => {
           return this.focus_y(d.x0) - this.focus_y(d.x1) - 1;
       });
