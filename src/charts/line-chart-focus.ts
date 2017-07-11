@@ -10,10 +10,10 @@ export class LineChartFocus {
   @bindable y_attribute = "y";
 
   // Two-Way
-  @bindable({ defaultBindingMode: bindingMode.twoWay }) mo;
+  @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
 
   // Observed Variables
-  @bindable data = [];
+  @bindable({ defaultBindingMode: bindingMode.twoWay }) data = [];
 
   // Aurelia variables
   private element;
@@ -29,6 +29,7 @@ export class LineChartFocus {
   private focus_x;
   private valueline;
   private histogram;
+  private brush;
 
   // set the dimensions and margins of the graph
   private width;
@@ -79,6 +80,17 @@ export class LineChartFocus {
 
   unbind() {
     this.subscription.dispose();
+  }
+
+  brushed(extent) {
+      this.data.forEach((d: any[]) => {
+          if(d[d.length-1][this.y_attribute] >= extent[1] && d[d.length-1][this.y_attribute] <= extent[0]) {
+              console.log("ok")
+              d[0]["highlight"] = 0;
+          }
+      })
+
+      this.updateChart()
   }
 
   initChart() {
@@ -162,6 +174,22 @@ export class LineChartFocus {
     this.valueline = d3.line()
         .x((d) => this.x(d[this.x_attribute]))
         .y((d) => this.y(d[this.y_attribute]));
+
+    this.brush = d3.brushY()
+        .extent([[0, 0], [this.focus_width, this.focus_height]])
+        .on("brush end", this.brushed);
+
+    this.focus.append("g")
+      .attr("class", "brush")
+      .call(
+          d3.brushY()
+          .extent([[0, 0],                 [this.focus_width, this.focus_height]])
+          .on("end", (d) => {
+              if (!d3.event.sourceEvent) return; // Only transition after input.
+              if (!d3.event.selection) return; // Ignore empty selections.
+
+              this.brushed(d3.event.selection.map(this.focus_y.invert))
+      }));
   }
 
   updateChart() {
@@ -214,6 +242,14 @@ export class LineChartFocus {
       .append("path")
       .attr("class", "line")
       .merge(chart)
+      .style("stroke", function(this, d) {
+          if(d[0]["highlight"] == 1) { return "steelblue"; }
+          else { return "grey"; }
+      })
+      .style("obacity", function(this, d) {
+          if(d[0]["highlight"] == 1) { return 1; }
+          else { return 0.5; }
+      })
       .attr("d", (d) => this.valueline(d));
 
     // Remove bars

@@ -115,7 +115,8 @@ export class Vspa {
                     "sus": out[i][0],
                     "inf": out[i][1],
                     "rec": out[i][2],
-                    "pop": out[i][0] + out[i][1] + out[i][2]
+                    "pop": out[i][0] + out[i][1] + out[i][2],
+                    "highlight": 1
                 })
             }
 
