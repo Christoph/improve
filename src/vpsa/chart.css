@@ -36,3 +36,5 @@
   fill: steelblue;
   opacity: 0.1;
 }
+
+rect.bar { fill: steelblue; }

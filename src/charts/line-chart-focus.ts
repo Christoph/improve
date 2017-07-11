@@ -110,7 +110,7 @@ export class LineChartFocus {
     this.focus_x = d3.scaleLinear()
         .range([0, this.focus_width]);
     this.focus_y = d3.scaleLinear()
-        .range([this.focus_height, 0]);
+        .rangeRound([this.focus_height, 0]);
 
     // add the x Axis
     this.linechart.append("g")
@@ -161,12 +161,6 @@ export class LineChartFocus {
     this.valueline = d3.line()
         .x((d) => this.x(d[this.x_attribute]))
         .y((d) => this.y(d[this.y_attribute]));
-
-    // Define Histogram
-    this.histogram = d3.histogram()
-        .value((d) => d[this.y_attribute])
-        .domain(this.focus_y.domain())
-        .thresholds(this.focus_y.ticks(20));
   }
 
   updateChart() {
@@ -181,15 +175,19 @@ export class LineChartFocus {
          focus_data.push(d[d.length-1])
      })
 
-     let bins = this.histogram(focus_data)
-
-     console.log(bins)
-
     this.x.domain([x_min, x_max]);
     this.y.domain([y_min, y_max]);
 
-    this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
     this.focus_y.domain([y_min, y_max]);
+
+    // let bins = this.histogram(focus_data)
+    let bins = d3.histogram()
+        .value((d) => d[this.y_attribute])
+        .domain(this.focus_y.domain())
+        .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 10))
+        (focus_data);
+
+    this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
 
     // Select chart
     let chart = this.linechart.selectAll(".linechart")
@@ -209,6 +207,7 @@ export class LineChartFocus {
     this.focus.selectAll(".xAxis")
         .call(d3.axisBottom(this.focus_x).ticks(2));
 
+    // Linechart
     // Add and update bars
     chart.enter()
       .append("path")
@@ -234,6 +233,7 @@ export class LineChartFocus {
     // Remove bars
     chart.exit().remove();
 
+    // Barchart
     // Add and update bars
     focus_chart.enter()
       .append("rect")
@@ -241,9 +241,11 @@ export class LineChartFocus {
       .merge(focus_chart)
       .attr("x", 1)
       .attr("transform", (d) => {
-		  return "translate(" + this.focus_x(d.x0) + "," + this.focus_y(d.length) + ")"; })
-      .attr("width", (d) => { return this.focus_x(d.x1) - this.focus_x(d.x0) -1 ; })
-      .attr("height", (d) => { return this.focus_height - this.focus_y(d.length); });
+		  return "translate(0," + this.focus_y(d.x1) + ")"; })
+      .attr("width", (d) => { return this.focus_width - this.focus_x(d.length); })
+      .attr("height", (d) => {
+          return this.focus_y(d.x0) - this.focus_y(d.x1) - 1;
+      });
 
     // Remove bars
     focus_chart.exit().remove();
