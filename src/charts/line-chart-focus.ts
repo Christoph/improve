@@ -155,6 +155,7 @@ export class LineChartFocus {
     this.focus.append("text")
         .style("text-anchor", "middle")
         .attr("y", -4)
+        .attr("x", this.focus_width)
         .text((d) => { return this.y_attribute});
 
     // define the line
