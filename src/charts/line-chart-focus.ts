@@ -8,12 +8,13 @@ export class LineChartFocus {
   @bindable margin = { top: 20, right: 60, bottom: 35, left: 60, middle: 20 };
   @bindable x_attribute = "x";
   @bindable y_attribute = "y";
+  @bindable redraw = 0;
 
   // Two-Way
   @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
 
   // Observed Variables
-  @bindable({ defaultBindingMode: bindingMode.twoWay }) data = [];
+  @bindable data = [];
 
   // Aurelia variables
   private element;
@@ -53,7 +54,11 @@ export class LineChartFocus {
         this.subscription = this.bindingEngine
           .collectionObserver(this.data)
           .subscribe(splices => this.dataMutated(splices));
-      }
+
+        // this.sub_high = this.bindingEngine
+        //     .propertyObserver(this.data[0], "highlight")
+        //     .subscribe(this.dataMutated);
+        }
 
       // set the dimensions and margins of the graph
       this.x_size = this.element.parentElement.offsetWidth;
@@ -78,19 +83,13 @@ export class LineChartFocus {
     this.updateChart();
   }
 
-  unbind() {
-    this.subscription.dispose();
+  redrawChanged() {
+      this.redraw = 0;
+      console.log("Redraw")
   }
 
-  brushed(extent) {
-      this.data.forEach((d: any[]) => {
-          if(d[d.length-1][this.y_attribute] >= extent[1] && d[d.length-1][this.y_attribute] <= extent[0]) {
-              console.log("ok")
-              d[0]["highlight"] = 0;
-          }
-      })
-
-      this.updateChart()
+  unbind() {
+    this.subscription.dispose();
   }
 
   initChart() {
@@ -175,9 +174,9 @@ export class LineChartFocus {
         .x((d) => this.x(d[this.x_attribute]))
         .y((d) => this.y(d[this.y_attribute]));
 
-    this.brush = d3.brushY()
-        .extent([[0, 0], [this.focus_width, this.focus_height]])
-        .on("brush end", this.brushed);
+    // this.brush = d3.brushY()
+    //     .extent([[0, 0], [this.focus_width, this.focus_height]])
+    //     .on("brush end", this.brushed);
 
     this.focus.append("g")
       .attr("class", "brush")
@@ -188,7 +187,7 @@ export class LineChartFocus {
               if (!d3.event.sourceEvent) return; // Only transition after input.
               if (!d3.event.selection) return; // Ignore empty selections.
 
-              this.brushed(d3.event.selection.map(this.focus_y.invert))
+              this.brushing = (d3.event.selection.map(this.focus_y.invert))
       }));
   }
 
@@ -240,16 +239,11 @@ export class LineChartFocus {
     // Add and update bars
     chart.enter()
       .append("path")
-      .attr("class", "line")
+      .attr("class", function(this, d) {
+          if(d[0]["highlight"] == 1) { return "line"; }
+          else { return "lineBackground"; }
+      })
       .merge(chart)
-      .style("stroke", function(this, d) {
-          if(d[0]["highlight"] == 1) { return "steelblue"; }
-          else { return "grey"; }
-      })
-      .style("obacity", function(this, d) {
-          if(d[0]["highlight"] == 1) { return 1; }
-          else { return 0.5; }
-      })
       .attr("d", (d) => this.valueline(d));
 
     // Remove bars

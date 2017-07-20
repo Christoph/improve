@@ -28,8 +28,17 @@
 
 .line {
   fill: none;
-  /*stroke: steelblue;*/
+  stroke: steelblue;
   stroke-width: 2px;
+  shape-rendering: crispEdges;
+}
+
+.lineBackground {
+  fill: none;
+  stroke: #ddd;
+  stroke-width: 2px;
+  opacity: 0.5;
+  shape-rendering: crispEdges;
 }
 
 .focus_element {

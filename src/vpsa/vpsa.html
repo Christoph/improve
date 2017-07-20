@@ -11,9 +11,11 @@
         </div>
         <div class="col-md-8">
             <div class="row">
+                <span>${b1}</span>
                 <div class="col-md-6" style="width:100%; height:300px">
                     <line-chart-focus
                         brushing.bind="b1"
+                        redraw.bind="redraw_pop"
                         x_attribute="x"
                         y_attribute="pop"
                         data.bind="data"></line-char-focust>
