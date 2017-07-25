@@ -159,7 +159,8 @@
           {
             "name": "d3",
             "path": "../node_modules/d3/build",
-            "main": "d3.js"
+            "main": "d3.js",
+            "export": "d3"
           },
           {
             "name": "aurelia-testing",
@@ -167,18 +168,20 @@
             "main": "aurelia-testing",
             "env": "dev"
           },
-          "jquery",
           {
-            "name": "bootstrap",
-            "path": "../node_modules/bootstrap/dist",
-            "main": "js/bootstrap.min",
-            "deps": [
-              "jquery"
-            ],
-            "resources": [
-              "css/bootstrap.css"
-            ],
-            "exports": "$"
+            "name":"jquery",
+            "path":"../node_modules/jquery/dist",
+            "main":"jquery.min",
+            "export": "$"
+          },
+          {
+              "name": "bootstrap",
+              "path": "../node_modules/bootstrap/dist",
+              "main": "js/bootstrap.min",
+              "deps": ["jquery"],
+              "resources": [
+                "css/bootstrap.css"
+              ]
           },
           {
             "name": "uikit",

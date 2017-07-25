@@ -1,4 +1,4 @@
-import {autoinject} from 'aurelia-framework';
+import {autoinject, bindable} from 'aurelia-framework';
 
 // This magic line removed the error messages for numeric
 declare var numeric: any;
@@ -8,11 +8,13 @@ export class Vspa {
     // VPSA
     param1 = 1;
     param2 = 1;
-
+    @bindable b1 = [100, 12, 33];
+    redraw_pop = 0;
 
     // SIR Model
     TS = 1.0
-    ND = 60*365
+    NY = 1
+    ND = this.NY*365
 
     S0 = 0.1
     I0 = 1e-4
@@ -32,6 +34,29 @@ export class Vspa {
     INPUT = [this.S0, this.I0, this.R0]
 
     data = <any[]> []
+    params = <any[]> []
+    data_length = 0;
+
+    lines = <any[]> []
+    parallel = <any[]> []
+
+    b1Changed() {
+        this.updateData(this.b1, "pop");
+        this.redraw_pop = 1;
+    }
+
+    private updateData(extent, attribute) {
+        console.log("Update Data")
+
+        for(let i; i < this.data_length; i++) {
+            if(this.data[i][attribute] < extent[1] && this.data[i][attribute] > extent[0]) {
+                this.data[0]["highlight"] = 1
+            }
+            else {
+                this.data[0]["highlight"] = 0
+            }
+        }
+    }
 
     private SIR = (t, INP) => {
     	let Y = [0, 0 ,0]
@@ -68,24 +93,33 @@ export class Vspa {
 
         // Mortality probabilty, I dies before natural death or recovery
         // let rho = [0.3, 0.4, 0.5, 0.6, 0.7]
-        let rho = [0.4, 0.5, 0.6]
+        let rho = [0.4, 0.5, 0.7]
         // Per captia death rate  from natural causes
-        let v = [1/(70*365.0), 1/(80*365.0), 1/(90*365.0)]
+        let v = [1/(60*365.0), 1/(70*365.0), 1/(75*365.0)]
         // Population birth rate
-        let mu = [1/(70*365.0), 1/(80*365.0), 1/(90*365.0)]
+        let mu = [1/(70*365.0),1/(65*365.0), 1/(60*365.0)]
         // Transmission rate: I -> S. Includes encounter and transmission rate
         // let beta = [200/365.0, 365/365.0, 520/365.0]
-        let beta = [365/365.0, 520/365.0]
+        let beta = [400/365.0, 520/365.0, 600/365.0]
         // Recovery rate
         // let gamma = [1/6.0, 1/7.0, 1/8.0]
-        let gamma = [1/6.0, 1/7.0]
+        let gamma = [1/6.0, 1/7.0, 1/8.0]
 
         return this.cartesian([rho, v, mu, beta, gamma])
     }
 
     vspa() {
+        // Update variables
+        this.ND = this.NY*365
+        this.R0 = 1 - this.S0 - this.I0
+        this.INPUT = [+this.S0, +this.I0, +this.R0]
 
         let params = this.get_params()
+        let time_range = <any[]> []
+
+        for (let i = 0; i < this.ND; i++) {
+            time_range.push(i)
+        }
 
         params.forEach( (d) => {
             this.rho = d[0];
@@ -94,20 +128,33 @@ export class Vspa {
             this.beta = d[3];
             this.gamma = d[4];
 
-            let sol = numeric.dopri(0, this.ND, this.INPUT, this.SIR, 1e-6, 1000);
+            let sol = numeric.dopri(0, this.ND, this.INPUT, this.SIR, 1e-6, 5000);
+
+            let out = sol.at(time_range)
 
             let temp = <any[]> []
-            for (let i = 0; i < sol.x.length; i++) {
+            for (let i = 0; i < out.length; i++) {
                 temp.push({
-                    "x": sol.x[i],
-                    "sus": sol.y[i][0],
-                    "inf": sol.y[i][1],
-                    "rec": sol.y[i][2],
-                    "pop": sol.y[i][0] + sol.y[i][1] + sol.y[i][2]
+                    "x": time_range[i],
+                    "sus": out[i][0],
+                    "inf": out[i][1],
+                    "rec": out[i][2],
+                    "pop": out[i][0] + out[i][1] + out[i][2]
                 })
             }
 
+            this.params.push({
+                "rho": this.rho,
+                "v": this.v,
+                "mu": this.mu,
+                "beta": this.beta,
+                "gamma": this.gamma
+            })
+
+            temp[0]["highlight"] = 1;
             this.data.push(temp)
         })
+
+        this.data_length = this.data.length;
     }
 }

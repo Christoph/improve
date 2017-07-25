@@ -5,9 +5,7 @@ import {inject, noView, bindable, bindingMode, BindingEngine} from 'aurelia-fram
 @noView()
 export class LineChart {
   // One-Way
-  @bindable margin = { top: 20, right: 20, bottom: 30, left: 40 };
-  @bindable x_size = 900;
-  @bindable y_size = 500;
+  @bindable margin = { top: 20, right: 20, bottom: 35, left: 60 };
   @bindable x_attribute = "x";
   @bindable y_attribute = "y";
 
@@ -23,7 +21,6 @@ export class LineChart {
 
   // D3 variables
   private svg;
-  private tooltip;
   private x;
   private y;
   private valueline;
@@ -31,6 +28,8 @@ export class LineChart {
   // set the dimensions and margins of the graph
   private width;
   private height;
+  private x_size = 900;
+  private y_size = 500;
 
   constructor(element, private bindingEngine) {
     this.element = element;
@@ -46,6 +45,9 @@ export class LineChart {
       }
 
       // set the dimensions and margins of the graph
+      this.x_size = this.element.parentElement.offsetWidth
+      this.y_size = this.element.parentElement.offsetHeight
+
       this.width = this.x_size - this.margin.left - this.margin.right;
       this.height = this.y_size - this.margin.top - this.margin.bottom;
 
@@ -85,28 +87,38 @@ export class LineChart {
       .attr("transform", "translate(0," + this.height + ")")
       .attr("class", "xAxis");
 
+      // x axis label
+      this.svg.append("text")
+          .style("text-anchor", "middle")
+          .attr("y", this.height+26)
+          .attr("x", this.width/2)
+          .text("days");
+
     // add the y Axis
     this.svg.append("g")
-      .attr("class", "yAxis");
+      .attr("class", "yAxis")
+
+      // y axis label
+    this.svg.append("text")
+        .style("text-anchor", "middle")
+        .attr("y", -4)
+        .text((d) => { return this.y_attribute});
 
     // define the line
     this.valueline = d3.line()
         .x((d) => this.x(d[this.x_attribute]))
         .y((d) => this.y(d[this.y_attribute]));
-
-    // create tooltip
-    // this.tooltip = d3.select(this.element).append("div")
-    //   .attr("class", "tooltip")
-    //   .style("opacity", 0);
   }
 
   updateChart() {
     // Update domains
     let x_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.x_attribute]))
     let y_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.y_attribute]))
-    
-    this.x.domain([0, x_max]);
-    this.y.domain([0, y_max]);
+    let x_min = d3.min(this.data, (array) => d3.min<any, any>(array, (d) => d[this.x_attribute]))
+    let y_min = d3.min(this.data, (array) => d3.min<any, any>(array, (d) => d[this.y_attribute]))
+
+    this.x.domain([x_min, x_max]);
+    this.y.domain([y_min, y_max]);
 
     // Select chart
     let chart = this.svg.selectAll(".svg")
