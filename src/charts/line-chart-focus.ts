@@ -80,6 +80,8 @@ export class LineChartFocus {
 
   // Update the chart if the data changes
   dataMutated(splices) {
+      console.log("data mutated")
+      console.log(this.data)
     this.updateChart();
   }
 
@@ -174,10 +176,6 @@ export class LineChartFocus {
         .x((d) => this.x(d[this.x_attribute]))
         .y((d) => this.y(d[this.y_attribute]));
 
-    // this.brush = d3.brushY()
-    //     .extent([[0, 0], [this.focus_width, this.focus_height]])
-    //     .on("brush end", this.brushed);
-
     let y_attribute = this.y_attribute
 
     this.focus.append("g")
@@ -189,30 +187,32 @@ export class LineChartFocus {
               if (!d3.event.sourceEvent) return; // Only transition after input.
               if (!d3.event.selection) return; // Ignore empty selections.
 
-            //   let extent = d3.event.selection.map(this.focus_y.invert);
-            //   let out = <any>[]
-              //
-            //   this.linechart.selectAll(".line")
-            //     .filter(function(d) {
-            //         if(d[d.length-1][y_attribute] >= extent[1] && d[d.length-1][y_attribute] <= extent[0]) {
-            //             out.push(d[d.length-1])
-            //         }
-            //     })
-            //     console.log(out)
-              this.brushing = (d3.event.selection.map(this.focus_y.invert))
+              let extent = d3.event.selection.map(this.focus_y.invert);
+              let out = <any>[]
+
+              this.linechart.selectAll(".line")
+                .filter(function(d) {
+                    if(d["data"][d.length-1][y_attribute] >= extent[1] && d["data"][d.length-1][y_attribute] <= extent[0]) {
+                        out.push(d["id"])
+                    }
+                })
+                console.log(out)
+              this.brushing = out
       }));
   }
 
   updateChart() {
     // Update domains
-    let x_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.x_attribute]))
-    let y_max = d3.max(this.data, (array) => d3.max<any, any>(array, (d) => d[this.y_attribute]))
-    let x_min = d3.min(this.data, (array) => d3.min<any, any>(array, (d) => d[this.x_attribute]))
-    let y_min = d3.min(this.data, (array) => d3.min<any, any>(array, (d) => d[this.y_attribute]))
+    let x_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.x_attribute]))
+    let y_max = d3.max(this.data, (array) => d3.max<any, any>(array["data"], (d) => d[this.y_attribute]))
+    let x_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.x_attribute]))
+    let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.y_attribute]))
 
-    let focus_data = <any> []
+    let focus_data = <any> [];
+
+
      this.data.forEach((d: any[]) => {
-         focus_data.push(d[d.length-1])
+         focus_data.push(d["data"][d["data"].length-1])
      })
 
     this.x.domain([x_min, x_max]);
@@ -252,11 +252,11 @@ export class LineChartFocus {
     chart.enter()
       .append("path")
       .attr("class", function(this, d) {
-          if(d[0]["highlight"] == 1) { return "line"; }
+          if(d["highlight"] == 0) { return "line"; }
           else { return "lineBackground"; }
       })
       .merge(chart)
-      .attr("d", (d) => this.valueline(d));
+      .attr("d", (d) => this.valueline(d["data"]));
 
     // Remove bars
     chart.exit().remove();
