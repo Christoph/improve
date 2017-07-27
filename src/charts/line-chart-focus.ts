@@ -54,10 +54,6 @@ export class LineChartFocus {
         this.subscription = this.bindingEngine
           .collectionObserver(this.data)
           .subscribe(splices => this.dataMutated(splices));
-
-        // this.sub_high = this.bindingEngine
-        //     .propertyObserver(this.data[0], "highlight")
-        //     .subscribe(this.dataMutated);
         }
 
       // set the dimensions and margins of the graph
@@ -80,18 +76,19 @@ export class LineChartFocus {
 
   // Update the chart if the data changes
   dataMutated(splices) {
-      console.log("data mutated")
-      console.log(this.data)
-    this.updateChart();
+      console.log("dataMutated")
+      this.updateChart();
   }
 
   redrawChanged() {
-      this.redraw = 0;
-      console.log("Redraw")
+      if(this.data.length > 1) {
+          console.log("redraw")
+          this.updateHighlight();
+      }
   }
 
   unbind() {
-    this.subscription.dispose();
+      this.subscription.dispose();
   }
 
   initChart() {
@@ -185,20 +182,35 @@ export class LineChartFocus {
           .extent([[0, 0], [this.focus_width, this.focus_height]])
           .on("end", (e) => {
               if (!d3.event.sourceEvent) return; // Only transition after input.
-              if (!d3.event.selection) return; // Ignore empty selections.
+              if (!d3.event.selection) {
+                  this.brushing = <any>[]
+              }; // Ignore empty selections.
 
               let extent = d3.event.selection.map(this.focus_y.invert);
               let out = <any>[]
 
               this.linechart.selectAll(".line")
                 .filter(function(d) {
-                    if(d["data"][d.length-1][y_attribute] >= extent[1] && d["data"][d.length-1][y_attribute] <= extent[0]) {
+                    if(d["data"][d["data"].length-1][y_attribute] >= extent[1] && d["data"][d["data"].length-1][y_attribute] <= extent[0]) {
                         out.push(d["id"])
                     }
                 })
-                console.log(out)
+
               this.brushing = out
       }));
+  }
+
+  updateHighlight() {
+
+      this.linechart.selectAll(".line")
+          .classed("highlight", function(this, d) {
+              if(d["highlight"] == 1) { return true; }
+              else { return false; }
+          })
+          .classed("background", function(this, d) {
+              if(d["highlight"] == 2) { return true; }
+              else { return false; }
+          });
   }
 
   updateChart() {
@@ -251,11 +263,16 @@ export class LineChartFocus {
     // Add and update bars
     chart.enter()
       .append("path")
-      .attr("class", function(this, d) {
-          if(d["highlight"] == 0) { return "line"; }
-          else { return "lineBackground"; }
-      })
+      .attr("class", "line")
       .merge(chart)
+      .classed("highlight", function(this, d) {
+          if(d["highlight"] == 1) { return true; }
+          else { return false; }
+      })
+      .classed("background", function(this, d) {
+          if(d["highlight"] == 2) { return true; }
+          else { return false; }
+      })
       .attr("d", (d) => this.valueline(d["data"]));
 
     // Remove bars

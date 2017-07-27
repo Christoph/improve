@@ -6,42 +6,47 @@
     <div class="row">
         <div class="col-md-4">
             <div style="width: 100%; height:500px">
-                <parallel-coordinates-vertical data.bind="params"></parallel-coordinates-vertical>
+                <parallel-coordinates-vertical data.bind="data_parallel"></parallel-coordinates-vertical>
             </div>
         </div>
         <div class="col-md-8">
             <div class="row">
-                <span>${b1}</span>
                 <div class="col-md-6" style="width:100%; height:300px">
                     <line-chart-focus
-                        brushing.bind="b1"
+                        brushing.bind="brushing_pop"
                         redraw.bind="redraw_pop"
                         x_attribute="x"
                         y_attribute="pop"
-                        data.bind="data"></line-char-focust>
+                        data.bind="data_lines"></line-char-focust>
                 </div>
                 <div class="col-md-6"style="width:100%; height:300px">
                     <line-chart-focus
+                        brushing.bind="brushing_sus"
+                        redraw.bind="redraw_sus"
                         mo.bind="test"
                         x_attribute="x"
                         y_attribute="sus"
-                        data.bind="data"></line-chart-focus>
+                        data.bind="data_lines"></line-chart-focus>
                                 </div>
                             </div>
             <div class="row">
                 <div class="col-md-6"style="width:100%; height:300px">
                     <line-chart-focus
+                        brushing.bind="brushing_inf"
+                        redraw.bind="redraw_inf"
                         mo.bind="test"
                         x_attribute="x"
                         y_attribute="inf"
-                        data.bind="data"></line-chart-focus>
+                        data.bind="data_lines"></line-chart-focus>
                                 </div>
                 <div class="col-md-6"style="width:100%; height:300px">
                     <line-chart-focus
+                        brushing.bind="brushing_rec"
+                        redraw.bind="redraw_rec"
                         mo.bind="test"
                         x_attribute="x"
                         y_attribute="rec"
-                        data.bind="data"></line-chart-focus>
+                        data.bind="data_lines"></line-chart-focus>
                 </div>
             </div>
         </div>

@@ -1,4 +1,4 @@
-import {autoinject, bindable} from 'aurelia-framework';
+import {autoinject, observable} from 'aurelia-framework';
 
 // This magic line removed the error messages for numeric
 declare var numeric: any;
@@ -8,8 +8,14 @@ export class Vspa {
     // VPSA
     param1 = 1;
     param2 = 1;
-    @bindable b1 = [100, 12, 33];
-    redraw_pop = 0;
+    @observable brushing_pop;
+    @observable brushing_sus;
+    @observable brushing_inf;
+    @observable brushing_rec;
+    redraw_pop;
+    redraw_sus;
+    redraw_inf;
+    redraw_rec;
 
     // SIR Model
     TS = 1.0
@@ -33,30 +39,101 @@ export class Vspa {
 
     INPUT = [this.S0, this.I0, this.R0]
 
-    data = <any[]> []
-    params = <any[]> []
+    data_parallel = <any[]> []
+    data_lines = <any[]> []
     data_length = 0;
 
     lines = <any[]> []
     parallel = <any[]> []
 
-    b1Changed() {
-        this.updateData(this.b1, "pop");
-        this.redraw_pop = 1;
+    brushing_popChanged() {
+        this.updateData(this.brushing_pop, "pop");
+        this.redrawLinecharts()
     }
 
-    private updateData(extent, attribute) {
+    redrawLinecharts() {
+        this.redraw_pop = this.redraw_pop == 0 ? 1 : 0;
+        this.redraw_inf = this.redraw_inf == 0 ? 1 : 0;
+        this.redraw_rec = this.redraw_rec == 0 ? 1 : 0;
+        this.redraw_sus = this.redraw_sus == 0 ? 1 : 0;
+    }
+
+    private updateData(ids, attribute) {
         console.log("Update Data")
 
-        for(let i; i < this.data_length; i++) {
-            if(this.data[i][attribute] < extent[1] && this.data[i][attribute] > extent[0]) {
-                this.data[0]["highlight"] = 1
+        for(let i = 0; i < this.data_length; i++) {
+            if(ids.length > 0) {
+                if(ids.includes(this.data_lines[i]["id"])) {
+                    this.data_lines[i]["highlight"] = 1
+                }
+                else {
+                    this.data_lines[i]["highlight"] = 2
+                }
             }
             else {
-                this.data[0]["highlight"] = 0
+                this.data_lines[i]["highlight"] = 1
             }
         }
+
     }
+
+    vspa() {
+        // Update variables
+        this.ND = this.NY*365
+        this.R0 = 1 - this.S0 - this.I0
+        this.INPUT = [+this.S0, +this.I0, +this.R0]
+
+        let params = this.get_params()
+        let time_range = <any[]> []
+
+        for (let i = 0; i < this.ND; i++) {
+            time_range.push(i)
+        }
+
+        params.forEach( (d, run) => {
+            this.rho = d[0];
+            this.v = d[1];
+            this.mu = d[2];
+            this.beta = d[3];
+            this.gamma = d[4];
+
+            let sol = numeric.dopri(0, this.ND, this.INPUT, this.SIR, 1e-6, 5000);
+
+            let out = sol.at(time_range)
+
+            let temp = <any[]> []
+            for (let i = 0; i < out.length; i++) {
+                temp.push({
+                    "x": time_range[i],
+                    "sus": out[i][0],
+                    "inf": out[i][1],
+                    "rec": out[i][2],
+                    "pop": out[i][0] + out[i][1] + out[i][2]
+                })
+            }
+
+            this.data_parallel.push({
+                    "id": run,
+                    "highlight": 0,
+                    "data": {
+                        "rho": this.rho,
+                        "v": this.v,
+                        "mu": this.mu,
+                        "beta": this.beta,
+                        "gamma": this.gamma
+                    }
+            })
+
+            this.data_lines.push({
+                    "id": run,
+                    "highlight": 0,
+                    "data": temp
+            })
+        })
+
+        this.data_length = this.data_lines.length;
+    }
+
 
     private SIR = (t, INP) => {
     	let Y = [0, 0 ,0]
@@ -108,53 +185,4 @@ export class Vspa {
         return this.cartesian([rho, v, mu, beta, gamma])
     }
 
-    vspa() {
-        // Update variables
-        this.ND = this.NY*365
-        this.R0 = 1 - this.S0 - this.I0
-        this.INPUT = [+this.S0, +this.I0, +this.R0]
-
-        let params = this.get_params()
-        let time_range = <any[]> []
-
-        for (let i = 0; i < this.ND; i++) {
-            time_range.push(i)
-        }
-
-        params.forEach( (d) => {
-            this.rho = d[0];
-            this.v = d[1];
-            this.mu = d[2];
-            this.beta = d[3];
-            this.gamma = d[4];
-
-            let sol = numeric.dopri(0, this.ND, this.INPUT, this.SIR, 1e-6, 5000);
-
-            let out = sol.at(time_range)
-
-            let temp = <any[]> []
-            for (let i = 0; i < out.length; i++) {
-                temp.push({
-                    "x": time_range[i],
-                    "sus": out[i][0],
-                    "inf": out[i][1],
-                    "rec": out[i][2],
-                    "pop": out[i][0] + out[i][1] + out[i][2]
-                })
-            }
-
-            this.params.push({
-                "rho": this.rho,
-                "v": this.v,
-                "mu": this.mu,
-                "beta": this.beta,
-                "gamma": this.gamma
-            })
-
-            temp[0]["highlight"] = 1;
-            this.data.push(temp)
-        })
-
-        this.data_length = this.data.length;
-    }
 }

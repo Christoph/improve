@@ -33,7 +33,14 @@
   shape-rendering: crispEdges;
 }
 
-.lineBackground {
+.line.highlight {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+  shape-rendering: crispEdges;
+}
+
+.line.background {
   fill: none;
   stroke: #ddd;
   stroke-width: 2px;
