@@ -17,6 +17,8 @@ export class Vspa {
     redraw_inf;
     redraw_rec;
 
+    @observable brushing_parallel;
+
     // SIR Model
     TS = 1.0
     NY = 1
@@ -61,9 +63,13 @@ export class Vspa {
         this.redrawLinecharts()
     }
 
-    brushing_InfChanged() {
+    brushing_infChanged() {
         this.updateData(this.brushing_inf, "inf");
         this.redrawLinecharts()
+    }
+
+    brushing_parallelChanged() {
+        console.log(this.brushing_parallel)
     }
 
     redrawLinecharts() {

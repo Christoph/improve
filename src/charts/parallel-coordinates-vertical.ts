@@ -10,7 +10,7 @@ export class parallelCoordinatesVertical {
     @bindable margin = { top: 60, right: 20, bottom: 30, left: 40 };
 
     // Two-Way
-    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing = new Map();
+    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
 
     // Observed Variables
     @bindable data = [];
@@ -70,55 +70,14 @@ export class parallelCoordinatesVertical {
     }
 
     // D3 functions
+    private exportBrushing(brushing) {
+        this.brushing = brushing;
+    }
 
     // Draw the lines
     private path(d) {
         return this.line(this.dimensions.map((p) => {
             return [this.x[p](d[p]), this.y(p)]; }));
-    }
-
-    // Display active lines
-    private brushHighlight(g, x, foreground) {
-        let actives = <any>[];
-        let extents = <any>[];
-
-        // Find out what is within the brushes
-        g.selectAll(".brush")
-          .filter(function(this, d) {
-            return d3.brushSelection(this);
-          })
-          .each(function(this, d) {
-            let brush_selection =  d3.brushSelection(this)
-
-            if(brush_selection != null)
-            {
-                actives.push(d)
-                extents.push([x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])])
-            }
-          });
-
-          // Bring brushed lines into foreground
-          foreground.style("display", function(d) {
-              return actives.every(function(p, i) {
-                return extents[i][0] <= d[p] && d[p] <= extents[i][1];
-              }) ? null : "none";
-          });
-    }
-
-    // Update external variables with current brushes
-    private getBrushing(g, x, brushing) {
-        g.selectAll(".brush")
-          .filter(function(this, d) {
-            return d3.brushSelection(this);
-          })
-          .each(function(this, d) {
-              let brush_selection =  d3.brushSelection(this)
-
-              if(brush_selection != null){
-                brushing.set(d, [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])])
-            }
-
-          });
     }
 
     initChart() {
@@ -143,15 +102,13 @@ export class parallelCoordinatesVertical {
     }
 
     updateChart() {
-        console.log("update chart")
-        console.log(this.data)
         // Get current dataset dimensions: Keys of the map
         if(this.data.length > 0) {
             this.dimensions = d3.keys(this.data[0]["data"]).filter((d) => {
                 return d != "name"
             });
         }
-        console.log(this.dimensions)
+
         // Create corresponding y axis
         // Currently only linear values
         this.dimensions.map((dim) => {
@@ -174,30 +131,19 @@ export class parallelCoordinatesVertical {
 
         // Add grey background lines for context.
         this.background = this.svg.append("g")
-            .attr("class", "background")
+            .attr("class", "line")
             .selectAll("path")
             .data(this.data)
             .enter().append("path")
             .attr("d", (d) => { return this.path(d["data"])});
 
-        // Add blue foreground lines for focus.
-        this.foreground = this.svg.append("g")
-            .attr("class", "foreground")
-            .selectAll("path")
-            .data(this.data)
-            .enter().append("path")
-            .attr("d", (d) => { return this.path(d)});
-
         // Create local versions of class variables
         // This is necessary due to the nature of TS and D3
-        let height = this.height;
-        let width = this.width;
+
+        let width = this.width
         let x = this.x;
-        let y = this.y;
-        let foreground = this.foreground;
-        let brushHighlight = this.brushHighlight;
-        let getBrushing = this.getBrushing;
-        let brushing = this.brushing;
+        let exportBrushing = this.exportBrushing;
+        let dat = this.data
 
         // Create drawing area
         let g = this.svg.selectAll(".dimension")
@@ -205,7 +151,7 @@ export class parallelCoordinatesVertical {
           .enter().append("g")
             .attr("class", "dimension")
             .attr("transform", (d) => {
-                return "translate(0," + y(d) + ")"; });
+                return "translate(0," + this.y(d) + ")"; });
 
         // Add axis
         g.append("g")
@@ -223,32 +169,34 @@ export class parallelCoordinatesVertical {
         // Add and store a brush for each axis.
         g.append("g")
             .attr("class", "brush")
-            // This part is very important!
-            // function(d) is used instead of (d) =>
-            // The reason is that within function(d) this is the element
-            // and this within (d) => is the TS class which means you need a local version of class variables
-            // for everything used within function(d)
             .each(function(this, d) {
                  d3.select(this).call(d3.brushX()
                 .extent([[0, -9], [width, 9]])
-                 .on("start", (d, i) => {
-                     d3.event.sourceEvent.stopPropagation();
-                 })
-                 .on("brush", (d, i) => {
+                .on("end", () => {
                      if (!d3.event.sourceEvent) return; // Only transition after input.
-                    if (!d3.event.selection) return; // Ignore empty selections.
 
-                    brushHighlight(g, x, foreground)
-                })
-                .on("end", (d, i) => {
-                    // Check if brush was removed
-                    if (d3.brushSelection(this) == null) {
-                        brushHighlight(g, x, foreground)
+                    let temp = new Set();
 
-                        brushing.delete(d)
-                    }
+                    g.selectAll(".brush")
+                      .filter(function(this, d) {
+                        return d3.brushSelection(this);
+                      })
+                      .each(function(this, d) {
+                          let brush_selection =  d3.brushSelection(this)
+                          let extent = <any>[]
+                          if(brush_selection != null) {
+                              extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
+                            }
 
-                    getBrushing(g, x, brushing)
+                          dat.forEach((datum) => {
+                              if(datum["data"][d] >= extent[0] && datum["data"][d] <= extent[1]) {
+                                  temp.add(datum["id"])
+                              }
+                          })
+
+                      });
+
+                    exportBrushing(Array.from(temp));
                 })
             );
         })
