@@ -23,7 +23,7 @@ export class parallelCoordinatesVertical {
     private svg;
     private x = {};
     private y;
-    private dimensions;
+    private dimensions = <any>[];
     private line;
     private background;
     private foreground;
@@ -143,16 +143,20 @@ export class parallelCoordinatesVertical {
     }
 
     updateChart() {
+        console.log("update chart")
+        console.log(this.data)
         // Get current dataset dimensions: Keys of the map
-        this.dimensions = d3.keys(this.data[0]).filter((d) => {
-            return d != "name"
-        });
-
+        if(this.data.length > 0) {
+            this.dimensions = d3.keys(this.data[0]["data"]).filter((d) => {
+                return d != "name"
+            });
+        }
+        console.log(this.dimensions)
         // Create corresponding y axis
         // Currently only linear values
         this.dimensions.map((dim) => {
             let ext = <any> d3.extent(this.data, (data) => {
-                return data[dim];
+                return data["data"][dim];
             })
 
             if(ext[0] == ext[1]) {
@@ -174,7 +178,7 @@ export class parallelCoordinatesVertical {
             .selectAll("path")
             .data(this.data)
             .enter().append("path")
-            .attr("d", (d) => { return this.path(d)});
+            .attr("d", (d) => { return this.path(d["data"])});
 
         // Add blue foreground lines for focus.
         this.foreground = this.svg.append("g")
