@@ -51,6 +51,21 @@ export class Vspa {
         this.redrawLinecharts()
     }
 
+    brushing_susChanged() {
+        this.updateData(this.brushing_sus, "sus");
+        this.redrawLinecharts()
+    }
+
+    brushing_recChanged() {
+        this.updateData(this.brushing_rec, "rec");
+        this.redrawLinecharts()
+    }
+
+    brushing_InfChanged() {
+        this.updateData(this.brushing_inf, "inf");
+        this.redrawLinecharts()
+    }
+
     redrawLinecharts() {
         this.redraw_pop = this.redraw_pop == 0 ? 1 : 0;
         this.redraw_inf = this.redraw_inf == 0 ? 1 : 0;
