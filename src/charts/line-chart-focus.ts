@@ -76,13 +76,11 @@ export class LineChartFocus {
 
   // Update the chart if the data changes
   dataMutated(splices) {
-      console.log("dataMutated")
       this.updateChart();
   }
 
   redrawChanged() {
       if(this.data.length > 1) {
-          console.log("redraw")
           this.updateHighlight();
       }
   }
