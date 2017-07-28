@@ -18,6 +18,7 @@ export class Vspa {
     redraw_rec;
 
     @observable brushing_parallel;
+    redraw_parallel;
 
     // SIR Model
     TS = 1.0
@@ -69,7 +70,8 @@ export class Vspa {
     }
 
     brushing_parallelChanged() {
-        console.log(this.brushing_parallel)
+        this.updateInData(this.brushing_parallel)
+        this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
     }
 
     redrawLinecharts() {
@@ -80,7 +82,7 @@ export class Vspa {
     }
 
     private updateData(ids, attribute) {
-        console.log("Update Data")
+        console.log("Update Out Data")
 
         for(let i = 0; i < this.data_length; i++) {
             if(ids.length > 0) {
@@ -95,7 +97,24 @@ export class Vspa {
                 this.data_lines[i]["highlight"] = 1
             }
         }
+    }
 
+    private updateInData(ids) {
+        console.log("Update In Data")
+
+        for(let i = 0; i < this.data_length; i++) {
+            if(ids.length > 0) {
+                if(ids.includes(this.data_parallel[i]["id"])) {
+                    this.data_parallel[i]["highlight"] = 1
+                }
+                else {
+                    this.data_parallel[i]["highlight"] = 2
+                }
+            }
+            else {
+                this.data_parallel[i]["highlight"] = 1
+            }
+        }
     }
 
     vspa() {

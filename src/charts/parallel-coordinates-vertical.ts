@@ -8,6 +8,7 @@ declare var ParCoords: any;
 export class parallelCoordinatesVertical {
     // One-Way
     @bindable margin = { top: 60, right: 20, bottom: 30, left: 40 };
+    @bindable redraw = 0;
 
     // Two-Way
     @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
@@ -64,6 +65,12 @@ export class parallelCoordinatesVertical {
         this.updateChart();
     }
 
+    redrawChanged() {
+        if(this.data.length > 1) {
+            this.updateHighlight();
+        }
+    }
+
     // Remove the watcher after disposing the class
     unbind() {
         this.subscription.dispose();
@@ -78,6 +85,31 @@ export class parallelCoordinatesVertical {
     private path(d) {
         return this.line(this.dimensions.map((p) => {
             return [this.x[p](d[p]), this.y(p)]; }));
+    }
+
+    // Update external variables with current brushes
+    private getBrushing = (g, x, dat) => {
+        let temp = new Set();
+
+        g.selectAll(".brush")
+          .filter(function(this, d) {
+            return d3.brushSelection(this);
+          })
+          .each(function(this, d) {
+              let brush_selection =  d3.brushSelection(this)
+              let extent = <any>[]
+              if(brush_selection != null) {
+                  extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
+                }
+
+              dat.forEach((datum) => {
+                  if(datum["data"][d] >= extent[0] && datum["data"][d] <= extent[1]) {
+                      temp.add(datum["id"])
+                  }
+              })
+          });
+
+          this.brushing = Array.from(temp);
     }
 
     initChart() {
@@ -99,6 +131,18 @@ export class parallelCoordinatesVertical {
         // Basic initialization
         this.line = d3.line()
         .curve(d3.curveMonotoneY);
+    }
+
+    updateHighlight() {
+        this.svg.selectAll(".line")
+            .classed("highlight", function(this, d) {
+                if(d["highlight"] == 1) { return true; }
+                else { return false; }
+            })
+            .classed("background", function(this, d) {
+                if(d["highlight"] == 2) { return true; }
+                else { return false; }
+            });
     }
 
     updateChart() {
@@ -131,10 +175,19 @@ export class parallelCoordinatesVertical {
 
         // Add grey background lines for context.
         this.background = this.svg.append("g")
-            .attr("class", "line")
+
             .selectAll("path")
             .data(this.data)
             .enter().append("path")
+            .attr("class", "line")
+            .classed("highlight", function(this, d) {
+                if(d["highlight"] == 1) { return true; }
+                else { return false; }
+            })
+            .classed("background", function(this, d) {
+                if(d["highlight"] == 2) { return true; }
+                else { return false; }
+            })
             .attr("d", (d) => { return this.path(d["data"])});
 
         // Create local versions of class variables
@@ -142,8 +195,8 @@ export class parallelCoordinatesVertical {
 
         let width = this.width
         let x = this.x;
-        let exportBrushing = this.exportBrushing;
         let dat = this.data
+        let getBrushing = this.getBrushing;
 
         // Create drawing area
         let g = this.svg.selectAll(".dimension")
@@ -175,28 +228,7 @@ export class parallelCoordinatesVertical {
                 .on("end", () => {
                      if (!d3.event.sourceEvent) return; // Only transition after input.
 
-                    let temp = new Set();
-
-                    g.selectAll(".brush")
-                      .filter(function(this, d) {
-                        return d3.brushSelection(this);
-                      })
-                      .each(function(this, d) {
-                          let brush_selection =  d3.brushSelection(this)
-                          let extent = <any>[]
-                          if(brush_selection != null) {
-                              extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
-                            }
-
-                          dat.forEach((datum) => {
-                              if(datum["data"][d] >= extent[0] && datum["data"][d] <= extent[1]) {
-                                  temp.add(datum["id"])
-                              }
-                          })
-
-                      });
-
-                    exportBrushing(Array.from(temp));
+                     getBrushing(g, x, dat)
                 })
             );
         })
