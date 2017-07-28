@@ -76,6 +76,7 @@ export class LineChartFocus {
 
   // Update the chart if the data changes
   dataMutated(splices) {
+      console.log("dataMutated")
       this.updateChart();
   }
 

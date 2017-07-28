@@ -44,34 +44,38 @@ export class Vspa {
 
     data_parallel = <any[]> []
     data_lines = <any[]> []
+    data_lines_original = <any[]> []
     data_length = 0;
 
     lines = <any[]> []
     parallel = <any[]> []
 
+    all_ids = new Set();
+    current_filter = new Set();
+
     brushing_popChanged() {
-        this.updateData(this.brushing_pop, "pop");
-        this.redrawLinecharts()
+        this.updateOutData(this.brushing_pop);
+        this.updateInData(this.brushing_pop);
     }
 
     brushing_susChanged() {
-        this.updateData(this.brushing_sus, "sus");
-        this.redrawLinecharts()
+        this.updateOutData(this.brushing_sus);
+        this.updateInData(this.brushing_sus);
     }
 
     brushing_recChanged() {
-        this.updateData(this.brushing_rec, "rec");
-        this.redrawLinecharts()
+        this.updateOutData(this.brushing_rec);
+        this.updateInData(this.brushing_rec);
     }
 
     brushing_infChanged() {
-        this.updateData(this.brushing_inf, "inf");
-        this.redrawLinecharts()
+        this.updateOutData(this.brushing_inf);
+        this.updateInData(this.brushing_inf);
     }
 
     brushing_parallelChanged() {
-        this.updateInData(this.brushing_parallel)
-        this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
+        this.updateInData(this.brushing_parallel);
+        this.filterOutData(this.brushing_parallel);
     }
 
     redrawLinecharts() {
@@ -81,9 +85,7 @@ export class Vspa {
         this.redraw_sus = this.redraw_sus == 0 ? 1 : 0;
     }
 
-    private updateData(ids, attribute) {
-        console.log("Update Out Data")
-
+    private updateOutData(ids) {
         for(let i = 0; i < this.data_length; i++) {
             if(ids.length > 0) {
                 if(ids.includes(this.data_lines[i]["id"])) {
@@ -97,11 +99,11 @@ export class Vspa {
                 this.data_lines[i]["highlight"] = 1
             }
         }
+
+        this.redrawLinecharts();
     }
 
     private updateInData(ids) {
-        console.log("Update In Data")
-
         for(let i = 0; i < this.data_length; i++) {
             if(ids.length > 0) {
                 if(ids.includes(this.data_parallel[i]["id"])) {
@@ -115,6 +117,33 @@ export class Vspa {
                 this.data_parallel[i]["highlight"] = 1
             }
         }
+
+        this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
+    }
+
+    private filterOutData(ids) {
+        let highlight_list = new Set(ids);
+
+        // Remove not selected ids
+        let remove_list = Array.from(this.current_filter).filter(x => !highlight_list.has(x))
+
+        console.log(remove_list)
+
+        for(let i = 0; i < this.data_lines.length; i++) {
+            if(remove_list.includes(this.data_lines[i]["id"])) {
+                this.data_lines.splice(i, 1)
+            }
+        }
+
+        // Add missing ids
+        let add_list = Array.from(highlight_list).filter(x => !this.current_filter.has(x))
+
+        this.data_lines.push(...this.data_lines_original.filter(x => add_list.includes(x["id"])))
+
+        // Save current filter
+        this.current_filter = highlight_list;
+
+        console.log(this.data_lines.length)
     }
 
     vspa() {
@@ -152,6 +181,8 @@ export class Vspa {
                 })
             }
 
+            this.all_ids.add(run)
+
             this.data_parallel.push({
                     "id": run,
                     "highlight": 0,
@@ -164,14 +195,14 @@ export class Vspa {
                     }
             })
 
-            this.data_lines.push({
+            this.data_lines_original.push({
                     "id": run,
                     "highlight": 0,
                     "data": temp
             })
         })
 
-        this.data_length = this.data_lines.length;
+        this.data_length = this.data_lines_original.length;
     }
 
 
