@@ -127,11 +127,9 @@ export class Vspa {
         // Remove not selected ids
         let remove_list = Array.from(this.current_filter).filter(x => !highlight_list.has(x))
 
-        console.log(remove_list)
-
         for(let i = 0; i < this.data_lines.length; i++) {
             if(remove_list.includes(this.data_lines[i]["id"])) {
-                this.data_lines.splice(i, 1)
+                this.data_lines.splice(i)
             }
         }
 
@@ -142,8 +140,6 @@ export class Vspa {
 
         // Save current filter
         this.current_filter = highlight_list;
-
-        console.log(this.data_lines.length)
     }
 
     vspa() {
