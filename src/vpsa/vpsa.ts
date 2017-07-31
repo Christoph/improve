@@ -125,18 +125,28 @@ export class Vspa {
         let highlight_list = new Set(ids);
 
         // Remove not selected ids
-        let remove_list = Array.from(this.current_filter).filter(x => !highlight_list.has(x))
+        // let remove_list = Array.from(this.current_filter).filter(x => !highlight_list.has(x))
+        //
+        // for(let i in this.data_lines) {
+        //     if(remove_list.includes(this.data_lines[i]["id"])) {
+        //         this.data_lines.splice(+i)
+        //     }
+        // }
+        // for(let i = 0; i < data_length; i++) {
+        //     // console.log(this.data_lines)
+        //     // console.log(this.data_lines[i])
+        //     if(remove_list.includes(this.data_lines[i]["id"])) {
+        //         console.log(i)
+        //         this.data_lines.splice(i)
+        //     }
+        // }
 
-        for(let i = 0; i < this.data_lines.length; i++) {
-            if(remove_list.includes(this.data_lines[i]["id"])) {
-                this.data_lines.splice(i)
-            }
-        }
+        this.data_lines.length = 0
 
         // Add missing ids
-        let add_list = Array.from(highlight_list).filter(x => !this.current_filter.has(x))
+        // let add_list = Array.from(highlight_list).filter(x => !this.current_filter.has(x))
 
-        this.data_lines.push(...this.data_lines_original.filter(x => add_list.includes(x["id"])))
+        this.data_lines.push(...this.data_lines_original.filter(x => highlight_list.has(x["id"])))
 
         // Save current filter
         this.current_filter = highlight_list;
@@ -198,6 +208,7 @@ export class Vspa {
             })
         })
 
+        this.data_lines.push(...this.data_lines_original)
         this.data_length = this.data_lines_original.length;
     }
 
