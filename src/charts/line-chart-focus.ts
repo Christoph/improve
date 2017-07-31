@@ -76,8 +76,13 @@ export class LineChartFocus {
 
   // Update the chart if the data changes
   dataMutated(splices) {
-      console.log("dataMutated")
-      this.updateChart();
+      if(this.data.length > 1) {
+          this.updateChart();
+      }
+      else {
+          this.svg.selectAll(".line").remove()
+          this.focus.selectAll(".bar").remove()
+      }
   }
 
   redrawChanged() {
@@ -201,7 +206,7 @@ export class LineChartFocus {
 
   updateHighlight() {
 
-      this.linechart.selectAll(".line")
+      this.linechart.selectAll("path.line")
           .classed("highlight", function(this, d) {
               if(d["highlight"] == 1) { return true; }
               else { return false; }
@@ -220,7 +225,6 @@ export class LineChartFocus {
     let y_min = d3.min(this.data, (array) => d3.min<any, any>(array["data"], (d) => d[this.y_attribute]))
 
     let focus_data = <any> [];
-
 
      this.data.forEach((d: any[]) => {
          focus_data.push(d["data"][d["data"].length-1])
@@ -241,10 +245,12 @@ export class LineChartFocus {
     this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
 
     // Select chart
-    let chart = this.linechart.selectAll(".linechart")
-      .data(this.data)
+    let chart = this.linechart.selectAll("path.line")
+        .data(this.data)
+    // let chart = this.linechart.selectAll(".linechart")
+    //   .data(this.data)
 
-    let focus_chart = this.focus.selectAll(".focus")
+    let focus_chart = this.focus.selectAll("rect.bar")
         .data(bins)
 
     // Update axis
@@ -259,11 +265,25 @@ export class LineChartFocus {
         .call(d3.axisBottom(this.focus_x).ticks(2));
 
     // Linechart
+    // Remove bars
+    chart.exit().remove();
+
+    // Update
+    // paths.transition(500)
+    //     .attr("d", (d) => this.valueline(d["data"]))
+    //     .classed("highlight", function(this, d) {
+    //         if(d["highlight"] == 1) { return true; }
+    //         else { return false; }
+    //     })
+    //     .classed("background", function(this, d) {
+    //         if(d["highlight"] == 2) { return true; }
+    //         else { return false; }
+    //     })
+
     // Add and update bars
     chart.enter()
       .append("path")
       .attr("class", "line")
-      .merge(chart)
       .classed("highlight", function(this, d) {
           if(d["highlight"] == 1) { return true; }
           else { return false; }
@@ -274,18 +294,17 @@ export class LineChartFocus {
       })
       .attr("d", (d) => this.valueline(d["data"]));
 
-    // Remove bars
-    chart.exit().remove();
-
     // Barchart
-    // Add and update bars
-    focus_chart.enter()
-      .append("rect")
+    // Remove bars
+    focus_chart.exit().remove();
+
+    // Update bars
+    focus_chart.transition(500)
+      .attr("width", (d) => { return  this.focus_x(d.length); })
+
+    // Add bars
+    focus_chart.enter().append("rect")
       .attr("class", "bar")
-    //   .on("click", function(d) {
-    //     console.log(d)
-    //   })
-      .merge(focus_chart)
       .attr("x", 1)
       .attr("transform", (d) => {
 		  return "translate(0," + this.focus_y(d.x1) + ")"; })
@@ -294,7 +313,6 @@ export class LineChartFocus {
           return this.focus_y(d.x0) - this.focus_y(d.x1) - 1;
       });
 
-    // Remove bars
-    focus_chart.exit().remove();
+
   }
 }

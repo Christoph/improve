@@ -102,10 +102,10 @@ export class parallelCoordinatesVertical {
                   extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
                 }
 
-              dat.forEach((datum) => {
-                  if(datum["data"][d] >= extent[0] && datum["data"][d] <= extent[1]) {
+              let brushed_elements = dat.filter(x => x["data"][d] >= extent[0] && x["data"][d] <= extent[1])
+
+              brushed_elements.forEach((datum) => {
                       temp.add(datum["id"])
-                  }
               })
           });
 
