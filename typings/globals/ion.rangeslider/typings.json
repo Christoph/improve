@@ -1,0 +1,8 @@
+{
+  "resolution": "main",
+  "tree": {
+    "src": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/312556ead6370d3aeed0d0c782aee9a501f228a6/ion.rangeslider/index.d.ts",
+    "raw": "registry:dt/ion.rangeslider#2.0.2+20160819211420",
+    "typings": "https://raw.githubusercontent.com/DefinitelyTyped/DefinitelyTyped/312556ead6370d3aeed0d0c782aee9a501f228a6/ion.rangeslider/index.d.ts"
+  }
+}

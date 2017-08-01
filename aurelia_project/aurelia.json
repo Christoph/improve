@@ -53,6 +53,10 @@
     {
         "src": "./node_modules/bootstrap/dist/css/bootstrap.css.map",
         "dest": "./bootstrap/css"
+    },
+    {
+        "src": "./node_modules/ion-rangeslider/img/sprite-skin-flat.png",
+        "dest": "./ion-rangeslider/img"
     }
     ]
   },
@@ -187,6 +191,16 @@
               "deps": ["jquery"],
               "resources": [
                 "css/bootstrap.css"
+              ]
+          },
+          {
+              "name": "ion-rangeslider",
+              "path": "../node_modules/ion-rangeslider",
+              "main": "js/ion.rangeSlider",
+              "deps": ["jquery"],
+              "resources": [
+                  "css/ion.rangeSlider.css",
+                  "css/ion.rangeSlider.skinHTML5.css"
               ]
           },
           {

@@ -1,4 +1,5 @@
 import {autoinject, observable} from 'aurelia-framework';
+import "ion-rangeslider"
 
 // This magic line removed the error messages for numeric
 declare var numeric: any;
@@ -19,6 +20,8 @@ export class Vspa {
 
     @observable brushing_parallel;
     redraw_parallel;
+
+    test = 100
 
     // SIR Model
     TS = 1.0
@@ -52,6 +55,13 @@ export class Vspa {
 
     all_ids = new Set();
     current_filter = new Set();
+
+    attached() {
+        // Attaching range sliders
+        $("#example_id").ionRangeSlider({onFinish: (data) => {
+            this.test = data["from_pretty"]
+        }});
+    }
 
     brushing_popChanged() {
         this.updateOutData(this.brushing_pop);
