@@ -143,6 +143,8 @@ export class parallelCoordinatesVertical {
                 if(d["highlight"] == 2) { return true; }
                 else { return false; }
             });
+
+        this.svg.selectAll(".line.highlight").moveToFront();
     }
 
     updateChart() {

@@ -315,7 +315,5 @@ export class LineChartFocus {
       .attr("height", (d) => {
           return this.focus_y(d.x0) - this.focus_y(d.x1) - 1;
       });
-
-      console.log(this.linechart.selectAll("path.line").size())
   }
 }
