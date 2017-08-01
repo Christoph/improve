@@ -1,4 +1,5 @@
 import * as d3 from "d3";
+import * as _ from 'lodash';
 import {inject, noView, bindable, bindingMode, BindingEngine} from 'aurelia-framework';
 
 declare var ParCoords: any;
@@ -11,7 +12,7 @@ export class parallelCoordinatesVertical {
     @bindable redraw = 0;
 
     // Two-Way
-    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
+    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing = <any>[];
 
     // Observed Variables
     @bindable data = [];
@@ -109,7 +110,16 @@ export class parallelCoordinatesVertical {
               })
           });
 
-          this.brushing = Array.from(temp);
+          let filtered;
+
+          if(this.brushing) {
+              filtered = _.intersection(this.brushing, Array.from(temp))
+          }
+          else {
+              filtered = Array.from(temp)
+          }
+
+          this.brushing = filtered;
     }
 
     initChart() {
