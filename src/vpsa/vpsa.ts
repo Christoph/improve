@@ -153,6 +153,7 @@ export class Vspa {
             this.current_filter = highlight_list;
         }
         else {
+            this.data_lines.length = 0
             this.data_lines.push(...this.data_lines_original)
         }
     }
