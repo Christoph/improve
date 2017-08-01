@@ -216,6 +216,8 @@ export class LineChartFocus {
               if(d["highlight"] == 2) { return true; }
               else { return false; }
           });
+
+        this.linechart.selectAll("path.line.highlight").moveToFront();
   }
 
   updateChart() {
