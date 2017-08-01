@@ -188,6 +188,7 @@ export class LineChartFocus {
               if (!d3.event.sourceEvent) return; // Only transition after input.
               if (!d3.event.selection) {
                   this.brushing = <any>[]
+                  return;
               }; // Ignore empty selections.
 
               let extent = d3.event.selection.map(this.focus_y.invert);
