@@ -163,6 +163,12 @@
             "export": "d3"
           },
           {
+              "name": "d3-extended",
+              "path": "../node_modules/d3-extended",
+              "main": "d3-extended.min",
+              "deps": ["d3"]
+          },
+          {
             "name": "aurelia-testing",
             "path": "../node_modules/aurelia-testing/dist/amd",
             "main": "aurelia-testing",
