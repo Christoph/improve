@@ -12,7 +12,7 @@ export class parallelCoordinatesVertical {
     @bindable redraw = 0;
 
     // Two-Way
-    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing = <any>[];
+    @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
 
     // Observed Variables
     @bindable data = [];
@@ -78,9 +78,6 @@ export class parallelCoordinatesVertical {
     }
 
     // D3 functions
-    private exportBrushing(brushing) {
-        this.brushing = brushing;
-    }
 
     // Draw the lines
     private path(d) {
@@ -90,7 +87,8 @@ export class parallelCoordinatesVertical {
 
     // Update external variables with current brushes
     private getBrushing = (g, x, dat) => {
-        let temp = new Set();
+        let temp = <any>[];
+        let brushes = new Map();
 
         g.selectAll(".brush")
           .filter(function(this, d) {
@@ -99,27 +97,18 @@ export class parallelCoordinatesVertical {
           .each(function(this, d) {
               let brush_selection =  d3.brushSelection(this)
               let extent = <any>[]
+              let selection = <any>[];
+
               if(brush_selection != null) {
                   extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
                 }
 
               let brushed_elements = dat.filter(x => x["data"][d] >= extent[0] && x["data"][d] <= extent[1])
 
-              brushed_elements.forEach((datum) => {
-                      temp.add(datum["id"])
-              })
+              brushes.set(d, brushed_elements.map(x => x["id"]))
           });
 
-          let filtered;
-
-          if(this.brushing) {
-              filtered = _.intersection(this.brushing, Array.from(temp))
-          }
-          else {
-              filtered = Array.from(temp)
-          }
-
-          this.brushing = filtered;
+          this.brushing = _.intersection(...Array.from(brushes.values()));
     }
 
     initChart() {
