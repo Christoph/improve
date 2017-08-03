@@ -240,8 +240,6 @@ export class LineChartFocus {
         .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 20))
         (focus_data);
 
-    console.log(bins)
-
     this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
 
     // Select chart
@@ -250,8 +248,6 @@ export class LineChartFocus {
 
     let focus_chart = this.focus.selectAll("rect.bars")
         .data(bins)
-
-        console.log(focus_chart)
 
     // Update axis
     this.linechart.selectAll(".xAxis")
