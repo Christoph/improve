@@ -303,7 +303,7 @@ export class LineChartFocus {
 
     // Update bars
     focus_chart.transition(500)
-      .attr("width", (d) => { return  this.focus_x(d.length); })
+      .attr("width", (d) => { return  this.focus_x(d.length); });
 
     // Add bars
     focus_chart.enter().append("rect")
@@ -314,6 +314,7 @@ export class LineChartFocus {
       .attr("width", (d) => { return  this.focus_x(d.length); })
       .attr("height", (d) => {
           return this.focus_y(d.x0) - this.focus_y(d.x1) - 1;
-      });
+      })
+      .moveToBack();
   }
 }
