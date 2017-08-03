@@ -26,7 +26,6 @@ export class LineChartFocus {
   private focus;
   private x;
   private y;
-  private focus_y;
   private focus_x;
   private valueline;
   private histogram;
@@ -123,8 +122,6 @@ export class LineChartFocus {
 
     this.focus_x = d3.scaleLinear()
         .range([0, this.focus_width]);
-    this.focus_y = d3.scaleLinear()
-        .rangeRound([this.focus_height, 0]);
 
     // add the x Axis
     this.linechart.append("g")
@@ -191,7 +188,7 @@ export class LineChartFocus {
                   return;
               }; // Ignore empty selections.
 
-              let extent = d3.event.selection.map(this.focus_y.invert);
+              let extent = d3.event.selection.map(this.y.invert);
               let out = <any>[]
 
               this.linechart.selectAll(".line")
@@ -236,25 +233,25 @@ export class LineChartFocus {
     this.x.domain([x_min, x_max]);
     this.y.domain([y_min, y_max]);
 
-    this.focus_y.domain([y_min, y_max]);
-
     // let bins = this.histogram(focus_data)
     let bins = d3.histogram()
         .value((d) => d[this.y_attribute])
-        .domain(this.focus_y.domain())
-        .thresholds(20)
+        .domain(this.y.domain())
+        .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 20))
         (focus_data);
+
+    console.log(bins)
 
     this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
 
     // Select chart
     let chart = this.linechart.selectAll("path.line")
         .data(this.data)
-    // let chart = this.linechart.selectAll(".linechart")
-    //   .data(this.data)
 
-    let focus_chart = this.focus.selectAll("rect.bar")
+    let focus_chart = this.focus.selectAll("rect.bars")
         .data(bins)
+
+        console.log(focus_chart)
 
     // Update axis
     this.linechart.selectAll(".xAxis")
@@ -263,25 +260,13 @@ export class LineChartFocus {
       .call(d3.axisLeft(this.y));
 
     this.focus.selectAll(".yAxis")
-        .call(d3.axisRight(this.focus_y));
+        .call(d3.axisRight(this.y));
     this.focus.selectAll(".xAxis")
         .call(d3.axisBottom(this.focus_x).ticks(2));
 
     // Linechart
     // Remove bars
     chart.exit().remove();
-
-    // Update
-    // paths.transition(500)
-    //     .attr("d", (d) => this.valueline(d["data"]))
-    //     .classed("highlight", function(this, d) {
-    //         if(d["highlight"] == 1) { return true; }
-    //         else { return false; }
-    //     })
-    //     .classed("background", function(this, d) {
-    //         if(d["highlight"] == 2) { return true; }
-    //         else { return false; }
-    //     })
 
     // Add and update bars
     chart.enter()
@@ -302,18 +287,18 @@ export class LineChartFocus {
     focus_chart.exit().remove();
 
     // Update bars
-    focus_chart.transition(500)
-      .attr("width", (d) => { return  this.focus_x(d.length); });
+    // focus_chart.transition(500)
+    //   .attr("width", (d) => { return  this.focus_x(d.length); });
 
     // Add bars
     focus_chart.enter().append("rect")
       .attr("class", "bar")
-      .attr("x", 1)
+    //   .attr("x", 1)
       .attr("transform", (d) => {
-		  return "translate(0," + this.focus_y(d.x1) + ")"; })
+		  return "translate(0," + this.y(d.x1) + ")"; })
       .attr("width", (d) => { return  this.focus_x(d.length); })
       .attr("height", (d) => {
-          return this.focus_y(d.x0) - this.focus_y(d.x1) - 1;
+          return this.y(d.x0) - this.y(d.x1) - 1;
       })
       .moveToBack();
   }
