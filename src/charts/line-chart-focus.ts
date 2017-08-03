@@ -243,9 +243,11 @@ export class LineChartFocus {
     this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
 
     // Select chart
+    this.linechart.selectAll("path.line").remove();
     let chart = this.linechart.selectAll("path.line")
         .data(this.data)
 
+    this.focus.selectAll(".bar").remove();
     let focus_chart = this.focus.selectAll("rect.bars")
         .data(bins)
 
@@ -281,10 +283,6 @@ export class LineChartFocus {
     // Barchart
     // Remove bars
     focus_chart.exit().remove();
-
-    // Update bars
-    // focus_chart.transition(500)
-    //   .attr("width", (d) => { return  this.focus_x(d.length); });
 
     // Add bars
     focus_chart.enter().append("rect")
