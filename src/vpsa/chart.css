@@ -31,6 +31,7 @@
   stroke: steelblue;
   stroke-width: 2px;
   shape-rendering: crispEdges;
+  opacity: 0.5;
 }
 
 .line.highlight {
