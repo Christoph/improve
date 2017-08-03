@@ -108,7 +108,15 @@ export class parallelCoordinatesVertical {
               brushes.set(d, brushed_elements.map(x => x["id"]))
           });
 
-          this.brushing = _.intersection(...Array.from(brushes.values()));
+          let brushed = _.intersection(...Array.from(brushes.values()));
+
+          // If no element is brushed return a x to let the system know that
+          // there are brushes active
+          if(brushes.size > 0 && brushed.length == 0) {
+              brushed.push("x")
+          }
+
+          this.brushing = brushed;
     }
 
     initChart() {
@@ -226,6 +234,11 @@ export class parallelCoordinatesVertical {
             .each(function(this, d) {
                  d3.select(this).call(d3.brushX()
                 .extent([[0, -9], [width, 9]])
+                .on("brush", () => {
+                     if (!d3.event.sourceEvent) return; // Only transition after input.
+
+                     getBrushing(g, x, dat)
+                })
                 .on("end", () => {
                      if (!d3.event.sourceEvent) return; // Only transition after input.
 
