@@ -242,7 +242,7 @@ export class LineChartFocus {
     let bins = d3.histogram()
         .value((d) => d[this.y_attribute])
         .domain(this.focus_y.domain())
-        .thresholds(d3.range(y_min, y_max, (y_max - y_min) / 50))
+        .thresholds(20)
         (focus_data);
 
     this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);

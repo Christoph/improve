@@ -1,8 +1,10 @@
 import {autoinject, observable} from 'aurelia-framework';
 import "ion-rangeslider"
+import * as d3 from "d3"
 
 // This magic line removed the error messages for numeric
 declare var numeric: any;
+declare var lobos: any;
 
 @autoinject
 export class Vspa {
@@ -34,14 +36,32 @@ export class Vspa {
 
     // Mortality probabilty, I dies before natural death or recovery
     rho = 0.5
+    rho_n = 5;
+    rho_from = 40;
+    rho_to = 60;
     // Per captia death rate  from natural causes
     v = 1/(70*365.0)
+    v_n = 5;
+    v_from = 70
+    v_to = 80
     // Population birth rate
-    mu = 1/(70*365.0)
+    mu = 1/(70*365.0);
+    mu_n = 5;
+    mu_from = 70;
+    mu_to = 180;
     // Transmission rate: I -> S. Includes encounter and transmission rate
-    beta=520/365.0
+    beta = 520/365.0
+    beta_n = 5;
+    beta_from = 0.9
+    beta_to = 1.1
     // Recovery rate
     gamma=1/7.0
+    gamma_n = 5;
+    gamma_from = 4;
+    gamma_to = 6;
+
+    // Sobol sampling
+    sobol_n = 100
 
     INPUT = [this.S0, this.I0, this.R0]
 
@@ -58,8 +78,77 @@ export class Vspa {
 
     attached() {
         // Attaching range sliders
-        $("#example_id").ionRangeSlider({onFinish: (data) => {
-            this.test = data["from_pretty"]
+        $("#rho").ionRangeSlider({
+            min: 0,
+            max: 100,
+            from: 40,
+            to: 60,
+            step: 1,
+            type: "double",
+            postfix: "%",
+            grid: true,
+            grid_num: 10,
+            onFinish: (data) => {
+            this.rho_from = data["from_pretty"]
+            this.rho_to = data["to_pretty"]
+        }});
+        $("#v").ionRangeSlider({
+            min: 10,
+            max: 150,
+            from: 70,
+            to: 80,
+            step: 1,
+            type: "double",
+            prefix: "1/",
+            postfix: " per year",
+            grid: true,
+            grid_num: 10,
+            onFinish: (data) => {
+            this.v_from = data["from_pretty"]
+            this.v_to = data["to_pretty"]
+        }});
+        $("#mu").ionRangeSlider({
+            min: 10,
+            max: 150,
+            from: 70,
+            to: 80,
+            step: 1,
+            type: "double",
+            prefix: "1/",
+            postfix: " per year",
+            grid: true,
+            grid_num: 10,
+            onFinish: (data) => {
+            this.mu_from = data["from_pretty"]
+            this.mu_to = data["to_pretty"]
+        }});
+        $("#beta").ionRangeSlider({
+            min: 0,
+            max: 2,
+            from: 0.9,
+            to: 1.1,
+            step: 0.1,
+            type: "double",
+            postfix: " per day",
+            grid: true,
+            grid_num: 10,
+            onFinish: (data) => {
+            this.gamma_from = data["from_pretty"]
+            this.gamma_to = data["to_pretty"]
+        }});
+        $("#gamma").ionRangeSlider({
+            min: 1,
+            max: 20,
+            from: 4,
+            to: 6,
+            step: 1,
+            type: "double",
+            prefix: "1/",
+            grid: true,
+            grid_num: 10,
+            onFinish: (data) => {
+            this.gamma_from = data["from_pretty"]
+            this.gamma_to = data["to_pretty"]
         }});
     }
 
@@ -154,7 +243,7 @@ export class Vspa {
         this.R0 = 1 - this.S0 - this.I0
         this.INPUT = [+this.S0, +this.I0, +this.R0]
 
-        let params = this.get_params()
+        let params = this.get_params("sobol")
         let time_range = <any[]> []
 
         for (let i = 0; i < this.ND; i++) {
@@ -239,24 +328,61 @@ export class Vspa {
         return r;
     }
 
-    get_params() {
-        let params = <any[]> []
-
-        // Mortality probabilty, I dies before natural death or recovery
-        // let rho = [0.3, 0.4, 0.5, 0.6, 0.7]
-        let rho = [0.4, 0.5, 0.7]
-        // Per captia death rate  from natural causes
-        let v = [1/(60*365.0), 1/(70*365.0), 1/(75*365.0)]
-        // Population birth rate
-        let mu = [1/(70*365.0),1/(65*365.0), 1/(60*365.0)]
-        // Transmission rate: I -> S. Includes encounter and transmission rate
-        // let beta = [200/365.0, 365/365.0, 520/365.0]
-        let beta = [400/365.0, 520/365.0, 600/365.0]
-        // Recovery rate
-        // let gamma = [1/6.0, 1/7.0, 1/8.0]
-        let gamma = [1/6.0, 1/7.0, 1/8.0]
-
-        return this.cartesian([rho, v, mu, beta, gamma])
+    getRandom(n, min, max) {
+        return Array.from({length: n}, () => Math.random() * (max - min) + min);
     }
 
+    getRandomInt(n, min, max) {
+        return Array.from({length: n}, () => Math.floor(Math.random() * (max - min + 1)) + min);
+    }
+
+    getParamsFromSobol(points) {
+        let params = <any>[];
+
+        let rho_scale = d3.scaleLinear()
+          .domain([0, 1])
+          .range([this.rho_from, this.rho_to]);
+        let v_scale = d3.scaleLinear()
+          .domain([0, 1])
+          .range([this.v_from, this.v_to]);
+        let mu_scale = d3.scaleLinear()
+          .domain([0, 1])
+          .range([this.mu_from, this.mu_to]);
+        let beta_scale = d3.scaleLinear()
+          .domain([0, 1])
+          .range([this.beta_from, this.beta_to]);
+        let gamma_scale = d3.scaleLinear()
+          .domain([0, 1])
+          .range([this.gamma_from, this.gamma_to]);
+
+        points.forEach( d => {
+            params.push([
+                Math.round(rho_scale(d[0]))/100,
+                1/(Math.round(v_scale(d[1]))*365),
+                1/(Math.round(mu_scale(d[2]))*365),
+                beta_scale(d[3]),
+                1/Math.round(gamma_scale(d[4]))
+            ])
+        })
+
+        return params
+    }
+
+    get_params(sampling) {
+        if(sampling == "rnd") {
+            let rho = this.getRandom(this.rho_n, this.rho_from/100, this.rho_to/100)
+            let v = this.getRandom(this.v_n, 1/(this.v_from*365), 1/(this.v_to*365))
+            let mu = this.getRandom(this.mu_n, 1/(this.mu_from*365), 1/(this.mu_to*365))
+            let beta = this.getRandom(this.beta_n, this.beta_from, this.beta_to)
+            let gamma = this.getRandom(this.gamma_n, 1/this.gamma_from, 1/this.gamma_to)
+
+            return this.cartesian([rho, v, mu, beta, gamma]);
+        }
+
+        if(sampling == "sobol") {
+            let seq = lobos.Sobol(5)
+
+            return this.getParamsFromSobol(seq.take(this.sobol_n))
+        }
+    }
 }
