@@ -181,7 +181,7 @@ export class LineChartFocus {
       .call(
           d3.brushY()
           .extent([[0, 0], [this.focus_width, this.focus_height]])
-          .on("end", (e) => {
+          .on("brush", (e) => {
               if (!d3.event.sourceEvent) return; // Only transition after input.
               if (!d3.event.selection) {
                   this.brushing = <any>[]
@@ -199,7 +199,27 @@ export class LineChartFocus {
                 })
 
               this.brushing = out
-      }));
+      })
+      .on("end", (e) => {
+          if (!d3.event.sourceEvent) return; // Only transition after input.
+          if (!d3.event.selection) {
+              this.brushing = <any>[]
+              return;
+          }; // Ignore empty selections.
+
+          let extent = d3.event.selection.map(this.y.invert);
+          let out = <any>[]
+
+          this.linechart.selectAll(".line")
+            .filter(function(d) {
+                if(d["data"][d["data"].length-1][y_attribute] >= extent[1] && d["data"][d["data"].length-1][y_attribute] <= extent[0]) {
+                    out.push(d["id"])
+                }
+            })
+
+          this.brushing = out
+      })
+    );
   }
 
   updateHighlight() {
