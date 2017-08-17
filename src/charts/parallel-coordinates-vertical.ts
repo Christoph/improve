@@ -2,8 +2,6 @@ import * as d3 from "d3";
 import * as _ from 'lodash';
 import {inject, noView, bindable, bindingMode, BindingEngine} from 'aurelia-framework';
 
-declare var ParCoords: any;
-
 @inject(Element, BindingEngine)
 @noView()
 export class parallelCoordinatesVertical {

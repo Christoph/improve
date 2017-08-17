@@ -1,5 +1,5 @@
 {
-  "name": "Improve-Research",
+  "name": "Improve",
   "type": "project:application",
   "platform": {
     "id": "web",
@@ -31,7 +31,7 @@
   },
   "editor": {
     "id": "atom",
-    "displayName": "Atom"
+    "displayName": "atom"
   },
   "unitTestRunner": {
     "id": "karma",
@@ -53,10 +53,6 @@
     {
         "src": "./node_modules/bootstrap/dist/css/bootstrap.css.map",
         "dest": "./bootstrap/css"
-    },
-    {
-        "src": "./node_modules/ion-rangeslider/img/sprite-skin-flat.png",
-        "dest": "./ion-rangeslider/img"
     }
     ]
   },
@@ -113,6 +109,7 @@
         "dependencies": [
           "aurelia-binding",
           "aurelia-bootstrapper",
+          "aurelia-computed",
           "aurelia-dependency-injection",
           "aurelia-event-aggregator",
           "aurelia-framework",
@@ -144,36 +141,6 @@
             "main": "aurelia-templating-router"
           },
           {
-            "name": "aurelia-computed",
-            "path": "../node_modules/aurelia-computed/dist/amd",
-            "main": "aurelia-computed"
-          },
-          {
-            "name": "aurelia-fetch-client",
-            "path": "../node_modules/aurelia-fetch-client/dist/amd",
-            "main": "aurelia-fetch-client"
-          },
-          {
-            "name": "nprogress",
-            "path": "../node_modules/nprogress",
-            "main": "nprogress",
-            "resources": [
-              "nprogress.css"
-            ]
-          },
-          {
-            "name": "d3",
-            "path": "../node_modules/d3/build",
-            "main": "d3.js",
-            "export": "d3"
-          },
-          {
-              "name": "d3-extended",
-              "path": "../node_modules/d3-extended",
-              "main": "d3-extended.min",
-              "deps": ["d3"]
-          },
-          {
             "name": "aurelia-testing",
             "path": "../node_modules/aurelia-testing/dist/amd",
             "main": "aurelia-testing",
@@ -200,6 +167,18 @@
               ]
           },
           {
+            "name": "d3",
+            "path": "../node_modules/d3/build",
+            "main": "d3.js",
+            "export": "d3"
+          },
+          {
+              "name": "d3-extended",
+              "path": "../node_modules/d3-extended",
+              "main": "d3-extended.min",
+              "deps": ["d3"]
+          },
+          {
               "name": "ion-rangeslider",
               "path": "../node_modules/ion-rangeslider",
               "main": "js/ion.rangeSlider",
@@ -208,18 +187,6 @@
                   "css/ion.rangeSlider.css",
                   "css/ion.rangeSlider.skinHTML5.css"
               ]
-          },
-          {
-            "name": "uikit",
-            "path": "../node_modules/uikit/dist",
-            "main": "js/uikit.min",
-            "deps": [
-              "jquery"
-            ],
-            "exports": "$",
-            "resources": [
-              "css/uikit.min.css"
-            ]
           }
         ]
       }
