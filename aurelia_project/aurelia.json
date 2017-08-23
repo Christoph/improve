@@ -150,7 +150,12 @@
                 "name": "lodash",
                 "path": "../node_modules/lodash",
                 "main": "lodash.min"
-            },
+          },
+          {
+                "name": "papaparse",
+                "path": "../node_modules/papaparse",
+                "main": "papaparse.min"
+          },
           {
             "name":"jquery",
             "path":"../node_modules/jquery/dist",
