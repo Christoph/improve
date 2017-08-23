@@ -132,22 +132,30 @@ export class barChart {
   updateChart() {
     let self = this
     // Update domains
-    let keys = ["UV"]
+    let keys = ["UV", "IBD"]
+    let totals = this.data.map(x => {
+      let s = 0;
+      keys.forEach(y => {
+        s = s + +x[y];
+      })
+      return s;
+    })
 
     this.x.domain(this.data.map(function(d) { return d.x; }));
-    this.y.domain([0, d3.max(this.data, function(d) { return d["total"]; })]).nice();
+    this.y.domain([0, d3.max(totals)]).nice();
 
-    this.barchart.append("g").selectAll("g")
+    this.barchart.selectAll("bars")
            .data(d3.stack().keys(keys)(self.data))
            .enter().append("g")
+             .attr("class", "medikament")
              .attr("fill", "steelblue")
            .selectAll("rect")
-           .data(function(d) { console.log(d); return d; })
+           .data(function(d) { return d; })
            .enter().append("rect")
              .attr("x", function(d) { return self.x(d.data.x); })
              .attr("y", function(d) { return self.y(d[1]); })
              .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); })
-             .attr("width", self.x.bandwidth());
+             .attr("width", self.x.bandwidth())
 
        this.barchart.append("g")
            .attr("class", "axis")

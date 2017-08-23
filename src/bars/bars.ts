@@ -16,7 +16,7 @@ export class bars {
     $.get("data/data.csv", function (data) {
       papa.parse(data, {
         header: true,
-        skipEmptyLines: false,
+        skipEmptyLines: true,
         complete: function(results) {
           self.data = results.data
           self.prepareData()
@@ -26,30 +26,26 @@ export class bars {
   }
 
   prepareData() {
-    this.data.forEach(x => {
-      let temp = {};
-      let total = 0;
+    let meds = Array.from(new Set(this.data.map(x => { return x["Med"]})));
 
-      temp["x"] = x["Med"]
+    meds.forEach(m => {
+      let all_meds = this.data.filter(d => d["Med"] == m && d["Typ"] == "Standart")
+      let med = {};
+      med["x"] = m;
 
-      if(x["Typ"] == "Standart") {
-        if(this.ibd_selected && x["Add"] == "IDB") {
-          temp["IBD"] = +x.KA + +x.FA;
-          total = total + temp["IBD"]
+      all_meds.forEach(x => {
+        if(this.ibd_selected && x["Add"] == "IBD") {
+          med["IBD"] = +x.KA + +x.FA;
         }
 
         if(this.uv_selected && x["Add"] == "UV") {
-          temp["UV"] = +x.KA + +x.FA;
-          total = total + temp["UV"]
+          med["UV"] = +x.KA + +x.FA;
         }
-      }
+      })
 
-      temp["total"] = total
-
-      if(Object.keys(temp).length > 2) {
-        this.data_prepared.push(temp)
+      if(Object.keys(med).length > 1) {
+        this.data_prepared.push(med)
       }
     })
-    console.log(this.data_prepared)
   }
 }
