@@ -94,7 +94,8 @@ export class barChart {
     this.y = d3.scaleLinear()
       .range([this.height, 0]);
     this.z = d3.scaleOrdinal()
-      .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+      .range(["red", "blue"])
+      .domain(["UV", "IBD"]);
 
     // add the x Axis
     this.barchart.append("g")
@@ -136,14 +137,19 @@ export class barChart {
 
     this.x.domain(this.data.map(function(d) { return d.x; }));
     this.y.domain([0, d3.max(totals, x => x.value)]).nice();
-    this.z.domain(keys);
+    // this.z.domain(keys);
 
     let t = d3.transition("default")
       .duration(500);
 
+    let stack = d3.stack().keys(keys)(self.data)
+
+    // Delete all bars before rerendering them
+    this.barchart.selectAll(".medikament").remove()
+
     // Join
     let chart = this.barchart.selectAll(".medikament")
-      .data(d3.stack().keys(keys)(self.data), x => x.key)
+      .data(stack, x => x.key)
 
     // Enter
     let bars = chart.enter().append("g")
@@ -155,9 +161,8 @@ export class barChart {
              .enter().append("rect")
                .attr("x", function(d) { return self.x(d.data.x); })
                .attr("width", self.x.bandwidth())
-               .attr("y", function(d) { return self.y(d[0]); })
+               .attr("y", this.height)
                .attr("height", 0)
-
 
     // Update
     bars.selectAll("rect")
@@ -167,25 +172,6 @@ export class barChart {
 
     // Exit
     chart.exit().remove();
-
-
-
-     // Update
-
-    // bars.exit().remove()
-
-    // this.barchart.selectAll("bars")
-    //        .data(d3.stack().keys(keys)(self.data))
-    //        .enter().append("g")
-    //          .attr("class", "medikament")
-    //          .attr("fill", function(d) { return self.z(d.key); })
-    //        .selectAll("rect")
-    //        .data(function(d) { return d; })
-    //        .enter().append("rect")
-    //          .attr("x", function(d) { return self.x(d.data.x); })
-    //          .attr("y", function(d) { return self.y(d[1]); })
-    //          .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); })
-    //          .attr("width", self.x.bandwidth())
 
     this.barchart.selectAll(".xAxis")
       .attr("transform", "translate(0," + this.height + ")")
