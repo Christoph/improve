@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import {inject, noView, bindable, bindingMode, BindingEngine} from 'aurelia-framework';
+import { inject, noView, bindable, bindingMode, BindingEngine } from 'aurelia-framework';
 
 @inject(Element, BindingEngine)
 @noView()
@@ -25,6 +25,8 @@ export class barChart {
   private barchart;
   private x;
   private y;
+  private z;
+  private legend;
 
   // set the dimensions and margins of the graph
   private width;
@@ -38,42 +40,36 @@ export class barChart {
 
   // This is called after binding attributes
   attached() {
-      if (this.data) {
-        // subscribe to the data array and watch for changes
-        this.subscription = this.bindingEngine
-          .collectionObserver(this.data)
-          .subscribe(splices => this.dataMutated(splices));
-        }
+    if (this.data) {
+      // subscribe to the data array and watch for changes
+      this.subscription = this.bindingEngine
+        .collectionObserver(this.data)
+        .subscribe(splices => this.dataMutated(splices));
+    }
 
-      // set the dimensions and margins of the graph
-      this.x_size = this.element.parentElement.offsetWidth;
-      this.y_size = this.element.parentElement.offsetHeight;
+    // set the dimensions and margins of the graph
+    this.x_size = this.element.parentElement.offsetWidth;
+    this.y_size = this.element.parentElement.offsetHeight;
 
-      this.width = this.x_size - this.margin.left - this.margin.right;
-      this.height = this.y_size - this.margin.top - this.margin.bottom;
+    this.width = this.x_size - this.margin.left - this.margin.right;
+    this.height = this.y_size - this.margin.top - this.margin.bottom;
 
-      this.initChart()
-      this.updateChart();
+    this.initChart()
+    this.updateChart();
   }
 
   // Update the chart if the data changes
   dataMutated(splices) {
-      if(this.data.length > 1) {
-          this.updateChart();
-      }
-      else {
-          this.svg.selectAll(".bar").remove()
-      }
-  }
-
-  redrawChanged() {
-      if(this.data.length > 1) {
-          this.updateHighlight();
-      }
+    if (this.data.length > 1) {
+      this.updateChart();
+    }
+    else {
+      this.svg.selectAll(".bar").remove()
+    }
   }
 
   unbind() {
-      this.subscription.dispose();
+    this.subscription.dispose();
   }
 
   initChart() {
@@ -85,11 +81,11 @@ export class barChart {
 
     // Linechart area
     this.barchart = this.svg
-        .append("g")
-        .attr("width", this.width)
-        .attr("height", this.height)
-        .attr("transform",
-        "translate(" + this.margin.left + ", "+ this.margin.top +")");
+      .append("g")
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .attr("transform",
+      "translate(" + this.margin.left + ", " + this.margin.top + ")");
 
     // set the ranges
     this.x = d3.scaleBand()
@@ -97,6 +93,8 @@ export class barChart {
       .range([0, this.width]);
     this.y = d3.scaleLinear()
       .range([this.height, 0]);
+    this.z = d3.scaleOrdinal()
+      .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
 
     // add the x Axis
     this.barchart.append("g")
@@ -107,65 +105,120 @@ export class barChart {
     this.barchart.append("g")
       .attr("class", "yAxis")
 
-      // y axis label
+    // y axis label
     this.barchart.append("text")
-        .style("text-anchor", "middle")
-        .attr("y", -4)
-        .text("Kosten");
-  }
+      .style("text-anchor", "middle")
+      .attr("y", -4)
+      .text("Kosten");
 
-  updateHighlight() {
-
-      // this.barchart.selectAll(".bar")
-      //     .classed("highlight", function(this, d) {
-      //         if(d["highlight"] == 1) { return true; }
-      //         else { return false; }
-      //     })
-      //     .classed("background", function(this, d) {
-      //         if(d["highlight"] == 2) { return true; }
-      //         else { return false; }
-      //     });
-      //
-      //   this.linechart.selectAll("path.line.highlight").moveToFront();
+    // add legend
+    this.legend = this.barchart.append("g")
+      .attr("font-family", "sans-serif")
+      .attr("font-size", 10)
+      .attr("text-anchor", "end")
+      .attr("class", "legend");
   }
 
   updateChart() {
     let self = this
-    // Update domains
-    let keys = ["UV", "IBD"]
+
+    let keys = []
+    if (this.data.length > 0) keys = Object.getOwnPropertyNames(this.data[0]).slice(1);
+
     let totals = this.data.map(x => {
-      let s = 0;
+      let s = { key: "", value: 0 };
       keys.forEach(y => {
-        s = s + +x[y];
+        s.key = y;
+        s.value = s.value + +x[y];
       })
       return s;
     })
 
     this.x.domain(this.data.map(function(d) { return d.x; }));
-    this.y.domain([0, d3.max(totals)]).nice();
+    this.y.domain([0, d3.max(totals, x => x.value)]).nice();
+    this.z.domain(keys);
 
-    this.barchart.selectAll("bars")
-           .data(d3.stack().keys(keys)(self.data))
-           .enter().append("g")
-             .attr("class", "medikament")
-             .attr("fill", "steelblue")
-           .selectAll("rect")
-           .data(function(d) { return d; })
-           .enter().append("rect")
-             .attr("x", function(d) { return self.x(d.data.x); })
-             .attr("y", function(d) { return self.y(d[1]); })
-             .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); })
-             .attr("width", self.x.bandwidth())
+    let t = d3.transition("default")
+      .duration(500);
 
-       this.barchart.append("g")
-           .attr("class", "axis")
-           .attr("transform", "translate(0," + this.height + ")")
-           .call(d3.axisBottom(this.x));
+    // Join
+    let chart = this.barchart.selectAll(".medikament")
+      .data(d3.stack().keys(keys)(self.data), x => x.key)
 
-       this.barchart.append("g")
-           .attr("class", "axis")
-           .call(d3.axisLeft(this.y));
-    // this.barchart.exit().remove();
+    // Enter
+    let bars = chart.enter().append("g")
+      .attr("class", "medikament")
+      .attr("fill", function(d) { return self.z(d.key); })
+
+    bars.selectAll("rect")
+             .data(function(d) { return d; })
+             .enter().append("rect")
+               .attr("x", function(d) { return self.x(d.data.x); })
+               .attr("width", self.x.bandwidth())
+               .attr("y", function(d) { return self.y(d[0]); })
+               .attr("height", 0)
+
+
+    // Update
+    bars.selectAll("rect")
+      .transition(t)
+      .attr("y", function(d) { return self.y(d[1]); })
+      .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); })
+
+    // Exit
+    chart.exit().remove();
+
+
+
+     // Update
+
+    // bars.exit().remove()
+
+    // this.barchart.selectAll("bars")
+    //        .data(d3.stack().keys(keys)(self.data))
+    //        .enter().append("g")
+    //          .attr("class", "medikament")
+    //          .attr("fill", function(d) { return self.z(d.key); })
+    //        .selectAll("rect")
+    //        .data(function(d) { return d; })
+    //        .enter().append("rect")
+    //          .attr("x", function(d) { return self.x(d.data.x); })
+    //          .attr("y", function(d) { return self.y(d[1]); })
+    //          .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); })
+    //          .attr("width", self.x.bandwidth())
+
+    this.barchart.selectAll(".xAxis")
+      .attr("transform", "translate(0," + this.height + ")")
+      .call(d3.axisBottom(this.x));
+
+    this.barchart.selectAll(".yAxis")
+      .call(d3.axisLeft(this.y));
+
+    // Join
+    let legend_group = this.legend
+      .selectAll("g")
+      .data(keys, x => x)
+
+    // Enter
+    let legends = legend_group.enter().append("g")
+
+    legends.append("rect")
+      .attr("x", this.width - 19)
+      .attr("width", 19)
+      .attr("height", 19)
+      .attr("fill", this.z);
+
+    legends.append("text")
+      .attr("x", this.width - 24)
+      .attr("y", 9.5)
+      .attr("dy", "0.32em")
+      .text(function(d) { return d; });
+
+    // Update
+    legend_group.merge(legends).attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+    // Exit
+    legend_group.exit().remove();
 
   }
 }

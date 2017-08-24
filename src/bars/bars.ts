@@ -1,4 +1,4 @@
-import {autoinject} from 'aurelia-framework';
+import {autoinject, observable} from 'aurelia-framework';
 import * as papa from 'papaparse'
 import "jquery"
 
@@ -8,8 +8,8 @@ export class bars {
   data = <any>[];
   data_prepared = <any>[];
 
-  uv_selected = true;
-  ibd_selected = true;
+  @observable uv_selected = true;
+  @observable ibd_selected = true;
 
   attached() {
     let self = this
@@ -25,8 +25,17 @@ export class bars {
     });
   }
 
+  uv_selectedChanged() {
+      this.prepareData();
+  }
+
+  ibd_selectedChanged() {
+      this.prepareData();
+  }
+
   prepareData() {
     let meds = Array.from(new Set(this.data.map(x => { return x["Med"]})));
+    this.data_prepared.length = 0;
 
     meds.forEach(m => {
       let all_meds = this.data.filter(d => d["Med"] == m && d["Typ"] == "Standart")
