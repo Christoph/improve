@@ -37,24 +37,27 @@ export class bars {
     let meds = Array.from(new Set(this.data.map(x => { return x["Med"]})));
     this.data_prepared.length = 0;
 
-    meds.forEach(m => {
-      let all_meds = this.data.filter(d => d["Med"] == m && d["Typ"] == "Standart")
-      let med = {};
-      med["x"] = m;
+    if(this.uv_selected || this.ibd_selected)
+    {
+      meds.forEach(m => {
+        let all_meds = this.data.filter(d => d["Med"] == m && d["Typ"] == "Standart")
+        let med = {};
+        med["x"] = m;
 
-      all_meds.forEach(x => {
-        if(this.ibd_selected && x["Add"] == "IBD") {
-          med["IBD"] = +x.KA + +x.FA;
-        }
+        all_meds.forEach(x => {
+          if(this.ibd_selected && x["Add"] == "IBD") {
+            med["IBD"] = +x.KA + +x.FA;
+          }
 
-        if(this.uv_selected && x["Add"] == "UV") {
-          med["UV"] = +x.KA + +x.FA;
+          if(this.uv_selected && x["Add"] == "UV") {
+            med["UV"] = +x.KA + +x.FA;
+          }
+        })
+
+        if(Object.keys(med).length > 1) {
+          this.data_prepared.push(med)
         }
       })
-
-      if(Object.keys(med).length > 1) {
-        this.data_prepared.push(med)
-      }
-    })
+    }
   }
 }

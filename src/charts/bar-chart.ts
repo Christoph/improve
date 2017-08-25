@@ -60,11 +60,11 @@ export class barChart {
 
   // Update the chart if the data changes
   dataMutated(splices) {
-    if (this.data.length > 1) {
+    if (this.data.length > 0) {
       this.updateChart();
     }
     else {
-      this.svg.selectAll(".bar").remove()
+      this.svg.selectAll(".medikament").remove()
     }
   }
 
@@ -112,6 +112,15 @@ export class barChart {
       .attr("y", -4)
       .text("Kosten");
 
+
+    // // Add text
+    // this.barchart.append("text")
+    //   .attr("class", "bar_text")
+    //   .style("text-anchor", "middle")
+    //   // .attr("x", function(d) { return this.x(d.data.x); })
+    //   .text("test")
+    //   // .text(function(d) { return totals[d.data.x]; })
+
     // add legend
     this.legend = this.barchart.append("g")
       .attr("font-family", "sans-serif")
@@ -127,9 +136,8 @@ export class barChart {
     if (this.data.length > 0) keys = Object.getOwnPropertyNames(this.data[0]).slice(1);
 
     let totals = this.data.map(x => {
-      let s = { key: "", value: 0 };
+      let s = { key: x.x, value: 0 };
       keys.forEach(y => {
-        s.key = y;
         s.value = s.value + +x[y];
       })
       return s;
@@ -173,6 +181,20 @@ export class barChart {
     // Exit
     chart.exit().remove();
 
+    // Add texts
+    let labels = this.barchart.selectAll(".labels")
+      .data(totals, x => x.key)
+
+    labels.enter().append("text")
+      .attr("class", "labels")
+      .style("text-anchor", "middle")
+        .merge(labels)
+      .attr("x", function(d) { return self.x(d.key) + self.x.bandwidth()/2; })
+      .attr("y", function(d) { return self.y(d.value) - 3; })
+      .text(function(d) { return d.value; })
+
+    labels.exit().remove();
+
     this.barchart.selectAll(".xAxis")
       .attr("transform", "translate(0," + this.height + ")")
       .call(d3.axisBottom(this.x));
@@ -205,6 +227,11 @@ export class barChart {
 
     // Exit
     legend_group.exit().remove();
+
+    this.barchart.selectAll(".bar_text")
+      .attr("x", function(d) { console.log(d); return this.x(d.data.x); })
+      .text("asd")
+      // .text(function(d) { return totals[d.data.x]; })
 
   }
 }
