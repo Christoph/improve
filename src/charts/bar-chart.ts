@@ -205,7 +205,7 @@ export class barChart {
     // Join
     let legend_group = this.legend
       .selectAll("g")
-      .data(keys, x => x)
+      .data(keys.reverse(), x => x)
 
     // Enter
     let legends = legend_group.enter().append("g")
@@ -227,11 +227,5 @@ export class barChart {
 
     // Exit
     legend_group.exit().remove();
-
-    this.barchart.selectAll(".bar_text")
-      .attr("x", function(d) { console.log(d); return this.x(d.data.x); })
-      .text("asd")
-      // .text(function(d) { return totals[d.data.x]; })
-
   }
 }
