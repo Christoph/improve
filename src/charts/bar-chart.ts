@@ -94,8 +94,8 @@ export class barChart {
     this.y = d3.scaleLinear()
       .range([this.height, 0]);
     this.z = d3.scaleOrdinal()
-      .range(["red", "blue"])
-      .domain(["UV", "IBD"]);
+      .range(["#33CA7F" ,"#ECE4B7", "#FC9F5B"])
+      .domain(["Basis", "UV", "IBD"]);
 
     // add the x Axis
     this.barchart.append("g")

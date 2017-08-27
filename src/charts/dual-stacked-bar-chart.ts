@@ -97,8 +97,8 @@ export class dualStackedBarChart {
     this.y = d3.scaleLinear()
       .range([this.height, 0]);
     this.z = d3.scaleOrdinal()
-      .range(["#EDD382", "#FC9E4F"])
-      .domain(["UV", "IBD"]);
+      .range(["#33CA7F" ,"#ECE4B7", "#FC9F5B"])
+      .domain(["Basis", "UV", "IBD"]);
 
     // add the x Axis
     this.barchart.append("g")
@@ -126,8 +126,11 @@ export class dualStackedBarChart {
   updateChart() {
     let self = this
 
+    let types = []
     let keys = []
-    if (this.data.length > 0) keys = Object.getOwnPropertyNames(this.data[0]).slice(1);
+    let costs = ["Standart", "Max"]
+    if (this.data.length > 0) types = Object.getOwnPropertyNames(this.data[0]).slice(1);
+    if (this.data.length > 0) keys = Object.getOwnPropertyNames(this.data[0]["Standart"]);
 
     let totals = this.data.map(x => {
       let s = { key: x.x, value: 0 };
@@ -138,8 +141,8 @@ export class dualStackedBarChart {
     })
 
     this.x.domain(this.data.map(function(d) { return d.x; }));
-    this.x_inner.domain(keys).rangeRound([0, this.x.bandwidth()]);
-    this.y.domain([0, d3.max(this.data, function(d) { return d3.max(keys, function(key) { return d[key]; }); })]).nice();
+    this.x_inner.domain(costs).rangeRound([0, this.x.bandwidth()]);
+    this.y.domain([0, d3.max(this.data, function(d) { return d3.max(costs, function(key) { return Object.values(d[key]).reduce((a, b) => a + b); }); })]).nice();
     // this.y.domain([0, d3.max(totals, x => x.value)]).nice();
     // this.z.domain(keys);
 
@@ -147,18 +150,18 @@ export class dualStackedBarChart {
       .duration(500);
 
       this.barchart.append("g")
-          .selectAll("g")
-          .data(self.data)
-          .enter().append("g")
-            .attr("transform", function(d) { return "translate(" + self.x(d.x) + ",0)"; })
-          .selectAll("rect")
-          .data(function(d) { return keys.map(function(key) { return {key: key, value: d[key]}; }); })
-          .enter().append("rect")
-            .attr("x", function(d) { return self.x_inner(d.key); })
-            .attr("y", function(d) { return self.y(d.value); })
-            .attr("width", self.x_inner.bandwidth())
-            .attr("height", function(d) { return self.height - self.y(d.value); })
-            .attr("fill", function(d) { return self.z(d.key); });
+        .selectAll("g")
+        .data(this.data)
+        .enter().append("g")
+          .attr("transform", function(d) { return "translate(" + self.x(d.x) + ",0)"; })
+        .selectAll("rect")
+        .data(function(d) { return costs.map(function(key) { return {key: key, value: Object.values(d[key]).reduce((a, b) => a + b)}}); })
+        .enter().append("rect")
+          .attr("x", function(d) { return self.x_inner(d.key); })
+          .attr("y", function(d) { return self.y(d.value); })
+          .attr("width", self.x_inner.bandwidth())
+          .attr("height", function(d) { return self.height - self.y(d.value); })
+          .attr("fill", function(d) { return self.z(d.key); });
 
 
     // let stack = d3.stack().keys(keys)(self.data)
