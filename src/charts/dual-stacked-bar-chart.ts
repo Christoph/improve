@@ -27,6 +27,7 @@ export class dualStackedBarChart {
   private x_inner;
   private y;
   private z;
+  private z_inner;
   private legend;
 
   // set the dimensions and margins of the graph
@@ -97,6 +98,9 @@ export class dualStackedBarChart {
     this.y = d3.scaleLinear()
       .range([this.height, 0]);
     this.z = d3.scaleOrdinal()
+      .range(["blue" ,"orange"])
+      .domain(["Standart", "Max"]);
+    this.z_inner = d3.scaleOrdinal()
       .range(["#33CA7F" ,"#ECE4B7", "#FC9F5B"])
       .domain(["Basis", "UV", "IBD"]);
 
@@ -149,19 +153,37 @@ export class dualStackedBarChart {
     let t = d3.transition("default")
       .duration(500);
 
-      this.barchart.append("g")
+      this.barchart.selectAll(".medikament").remove()
+
+      let chart = this.barchart.append("g")
+          .attr("class", "medikament")
         .selectAll("g")
         .data(this.data)
         .enter().append("g")
           .attr("transform", function(d) { return "translate(" + self.x(d.x) + ",0)"; })
         .selectAll("rect")
         .data(function(d) { return costs.map(function(key) { return {key: key, value: Object.values(d[key]).reduce((a, b) => a + b)}}); })
-        .enter().append("rect")
-          .attr("x", function(d) { return self.x_inner(d.key); })
-          .attr("y", function(d) { return self.y(d.value); })
-          .attr("width", self.x_inner.bandwidth())
-          .attr("height", function(d) { return self.height - self.y(d.value); })
-          .attr("fill", function(d) { return self.z(d.key); });
+
+      chart.enter().append("rect")
+        .attr("x", function(d) { return self.x_inner(d.key); })
+        .attr("y", function(d) { return self.y(d.value); })
+        .attr("width", self.x_inner.bandwidth())
+        .attr("fill", function(d) { return self.z(d.key); })
+        .attr("y", this.height)
+        .attr("height", 0)
+          .merge(chart).transition(t)
+        .attr("height", function(d) { return self.height - self.y(d.value); })
+        .attr("y", function(d) { return self.y(d.value); });
+
+      chart.enter().append("text")
+        // .attr("class", "labels")
+        .style("text-anchor", "middle")
+        .attr("x", function(d) { return self.x_inner(d.key) + self.x_inner.bandwidth()/2; })
+        .attr("y", function(d) { return self.y(d.value) - 3; })
+        .text(function(d) { return d.value; })
+
+
+      chart.exit().remove();
 
 
     // let stack = d3.stack().keys(keys)(self.data)
@@ -194,20 +216,6 @@ export class dualStackedBarChart {
     //
     // // Exit
     // chart.exit().remove();
-
-    // Add texts
-    let labels = this.barchart.selectAll(".labels")
-      .data(totals, x => x.key)
-
-    labels.enter().append("text")
-      .attr("class", "labels")
-      .style("text-anchor", "middle")
-        .merge(labels)
-      .attr("x", function(d) { return self.x(d.key) + self.x.bandwidth()/2; })
-      .attr("y", function(d) { return self.y(d.value) - 3; })
-      .text(function(d) { return d.value; })
-
-    labels.exit().remove();
 
     this.barchart.selectAll(".xAxis")
       .attr("transform", "translate(0," + this.height + ")")
