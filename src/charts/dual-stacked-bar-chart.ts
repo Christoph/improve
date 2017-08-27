@@ -98,9 +98,6 @@ export class dualStackedBarChart {
     this.y = d3.scaleLinear()
       .range([this.height, 0]);
     this.z = d3.scaleOrdinal()
-      .range(["blue" ,"orange"])
-      .domain(["Standart", "Max"]);
-    this.z_inner = d3.scaleOrdinal()
       .range(["#33CA7F" ,"#ECE4B7", "#FC9F5B"])
       .domain(["Basis", "UV", "IBD"]);
 
@@ -134,7 +131,7 @@ export class dualStackedBarChart {
     let keys = []
     let costs = ["Standart", "Max"]
     if (this.data.length > 0) types = Object.getOwnPropertyNames(this.data[0]).slice(1);
-    if (this.data.length > 0) keys = Object.getOwnPropertyNames(this.data[0]["Standart"]);
+    if (this.data.length > 0) keys = ["Basis", ...Object.getOwnPropertyNames(this.data[0]["Standart"])];
 
     let totals = this.data.map(x => {
       let s = { key: x.x, value: 0 };
@@ -146,10 +143,7 @@ export class dualStackedBarChart {
 
     this.x.domain(this.data.map(function(d) { return d.x; }));
     this.x_inner.domain(costs).rangeRound([0, this.x.bandwidth()]);
-    this.y.domain([0, d3.max(this.data, function(d) { return d3.max(costs, function(key) { return Object.values(d[key]).reduce((a, b) => a + b); }); })]).nice();
-    // this.y.domain([0, d3.max(totals, x => x.value)]).nice();
-    // this.z.domain(keys);
-
+    this.y.domain([0, d3.max(this.data, function(d) { return Object.values({ Basis: d["Basis"], ...d["Max"]}).reduce((a, b) => a + b); })]).nice();
     let t = d3.transition("default")
       .duration(500);
 
@@ -161,61 +155,38 @@ export class dualStackedBarChart {
         .data(this.data)
         .enter().append("g")
           .attr("transform", function(d) { return "translate(" + self.x(d.x) + ",0)"; })
-        .selectAll("rect")
-        .data(function(d) { return costs.map(function(key) { return {key: key, value: Object.values(d[key]).reduce((a, b) => a + b)}}); })
+        .selectAll(".groups")
+        .data(function(d) { return costs.map(function(key) { return {key: key, value: { Basis: d.Basis, ...d[key]} }}); })
 
-      chart.enter().append("rect")
-        .attr("x", function(d) { return self.x_inner(d.key); })
-        .attr("y", function(d) { return self.y(d.value); })
+      let groups = chart.enter().append("g")
+        .attr("transform", function(d) { return "translate(" + self.x_inner(d.key) + ",0)"; })
+        .attr("class", "groups")
+
+      groups.selectAll(".groups")
+        .data(function(d) { return d; })
+
+      let bars = groups.selectAll("rect")
+        .data(function(d) { return d3.stack().keys(keys)([d.value]); })
+        .enter().append("rect")
+        .attr("x", 0)
         .attr("width", self.x_inner.bandwidth())
         .attr("fill", function(d) { return self.z(d.key); })
-        .attr("y", this.height)
-        .attr("height", 0)
-          .merge(chart).transition(t)
-        .attr("height", function(d) { return self.height - self.y(d.value); })
-        .attr("y", function(d) { return self.y(d.value); });
+        // .attr("y", this.height)
+        // .attr("height", 0)
+        .attr("y", function(d) { return self.y(d[0][1]); })
+        .attr("height", function(d) { return self.y(d[0][0]) - self.y(d[0][1]); })
 
-      chart.enter().append("text")
-        // .attr("class", "labels")
-        .style("text-anchor", "middle")
-        .attr("x", function(d) { return self.x_inner(d.key) + self.x_inner.bandwidth()/2; })
-        .attr("y", function(d) { return self.y(d.value) - 3; })
-        .text(function(d) { return d.value; })
+      // chart.enter().append("text")
+      //   .style("text-anchor", "middle")
+      //   .attr("x", function(d) { return self.x_inner(d.key) + self.x_inner.bandwidth()/2; })
+      //   .attr("y", function(d) { return self.y(d.value) - 3; })
+      //   .text(function(d) { return d.value; })
 
 
       chart.exit().remove();
 
 
-    // let stack = d3.stack().keys(keys)(self.data)
-    //
-    // // Delete all bars before rerendering them
-    // this.barchart.selectAll(".medikament").remove()
-    //
-    // // Join
-    // let chart = this.barchart.selectAll(".medikament")
-    //   .data(stack, x => x.key)
-    //
-    // // Enter
-    // let bars = chart.enter().append("g")
-    //   .attr("class", "medikament")
-    //   .attr("fill", function(d) { return self.z(d.key); })
-    //
-    // bars.selectAll("rect")
-    //          .data(function(d) { return d; })
-    //          .enter().append("rect")
-    //            .attr("x", function(d) { return self.x(d.data.x); })
-    //            .attr("width", self.x.bandwidth())
-    //            .attr("y", this.height)
-    //            .attr("height", 0)
-    //
-    // // Update
-    // bars.selectAll("rect")
-    //   .transition(t)
-    //   .attr("y", function(d) { return self.y(d[1]); })
-    //   .attr("height", function(d) { return self.y(d[0]) - self.y(d[1]); })
-    //
-    // // Exit
-    // chart.exit().remove();
+
 
     this.barchart.selectAll(".xAxis")
       .attr("transform", "translate(0," + this.height + ")")
