@@ -162,12 +162,10 @@ export class dualStackedBarChart {
         .attr("transform", function(d) { return "translate(" + self.x_inner(d.key) + ",0)"; })
         .attr("class", "groups")
 
-      groups.selectAll(".groups")
-        .data(function(d) { return d; })
-
-      groups.selectAll("rect")
+      let bars = groups.selectAll("rect")
         .data(function(d) { return d3.stack().keys(keys)([d.value]); })
-        .enter().append("rect")
+
+      bars.enter().append("rect")
         .attr("x", 0)
         .attr("width", self.x_inner.bandwidth())
         .attr("fill", function(d) { return self.z(d.key); })
@@ -177,17 +175,13 @@ export class dualStackedBarChart {
         .attr("y", function(d) { return self.y(d[0][1]); })
         .attr("height", function(d) { return self.y(d[0][0]) - self.y(d[0][1]); })
 
-      // chart.enter().append("text")
-      //   .style("text-anchor", "middle")
-      //   .attr("x", function(d) { return self.x_inner(d.key) + self.x_inner.bandwidth()/2; })
-      //   .attr("y", function(d) { return self.y(d.value) - 3; })
-      //   .text(function(d) { return d.value; })
-
+      bars.enter().append("text")
+        .style("text-anchor", "middle")
+        .attr("x", function(d) { return self.x_inner.bandwidth()/2; })
+        .attr("y", function(d) { return self.y(Object.values(d[0].data).reduce((a, b) => a + b)) - 3; })
+        .text(function(d) { return Object.values(d[0].data).reduce((a, b) => a + b); })
 
       chart.exit().remove();
-
-
-
 
     this.barchart.selectAll(".xAxis")
       .attr("transform", "translate(0," + this.height + ")")
