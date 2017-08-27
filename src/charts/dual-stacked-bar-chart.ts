@@ -165,14 +165,15 @@ export class dualStackedBarChart {
       groups.selectAll(".groups")
         .data(function(d) { return d; })
 
-      let bars = groups.selectAll("rect")
+      groups.selectAll("rect")
         .data(function(d) { return d3.stack().keys(keys)([d.value]); })
         .enter().append("rect")
         .attr("x", 0)
         .attr("width", self.x_inner.bandwidth())
         .attr("fill", function(d) { return self.z(d.key); })
-        // .attr("y", this.height)
-        // .attr("height", 0)
+        .attr("y", this.height)
+        .attr("height", 0)
+        .merge(groups).transition(t)
         .attr("y", function(d) { return self.y(d[0][1]); })
         .attr("height", function(d) { return self.y(d[0][0]) - self.y(d[0][1]); })
 
