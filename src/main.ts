@@ -6,6 +6,7 @@ export function configure(aurelia: Aurelia) {
     .standardConfiguration()
     .plugin("aurelia-computed")
     .plugin("d3-extended")
+    .plugin("aurelia-bootstrap")
     .feature('resources');
 
   if (environment.debug) {
