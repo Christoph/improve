@@ -19,6 +19,7 @@ export class barChart {
   // Aurelia variables
   private element;
   private subscription;
+  private resize_sub;
 
   // D3 variables
   private svg;
@@ -47,6 +48,10 @@ export class barChart {
         .subscribe(splices => this.dataMutated(splices));
     }
 
+    this.resize_sub = this.bindingEngine
+      .propertyObserver(this.element.parentElement, "offsetWidth")
+      .subscribe(n => this.resize())
+
     // set the dimensions and margins of the graph
     this.x_size = this.element.parentElement.offsetWidth;
     this.y_size = this.element.parentElement.offsetHeight;
@@ -55,6 +60,17 @@ export class barChart {
     this.height = this.y_size - this.margin.top - this.margin.bottom;
 
     this.initChart()
+    this.updateChart();
+  }
+
+  resize() {
+    this.x_size = this.element.parentElement.offsetWidth;
+    this.y_size = this.element.parentElement.offsetHeight;
+
+    this.width = this.x_size - this.margin.left - this.margin.right;
+    this.height = this.y_size - this.margin.top - this.margin.bottom;
+
+    this.resizeChart();
     this.updateChart();
   }
 
@@ -70,6 +86,7 @@ export class barChart {
 
   unbind() {
     this.subscription.dispose();
+    this.resize_sub.dispose();
   }
 
   initChart() {
@@ -129,6 +146,28 @@ export class barChart {
       .attr("class", "legend");
   }
 
+  resizeChart() {
+    this.svg
+      .attr("width", this.width + this.margin.left + this.margin.right)
+      .attr("height", this.height + this.margin.top + this.margin.bottom);
+
+    // Linechart area
+    this.barchart
+      .attr("width", this.width)
+      .attr("height", this.height)
+      .attr("transform",
+      "translate(" + this.margin.left + ", " + this.margin.top + ")");
+
+    // set the ranges
+    this.x
+      .range([0, this.width]);
+    this.y
+      .range([this.height, 0]);
+
+    // add the x Axis
+    this.barchart.append("g")
+      .attr("transform", "translate(0," + this.height + ")")
+  }
   updateChart() {
     let self = this
 

@@ -4,6 +4,8 @@ import "jquery"
 
 @autoinject
 export class bars {
+  active = 1;
+
   message = "SA"
   data = <any>[];
   praeparate = <any>[];
