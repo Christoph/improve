@@ -112,7 +112,6 @@ export class barChart {
       .range([this.height, 0]);
     this.z = d3.scaleOrdinal()
       .range(["#33CA7F" ,"#ECE4B7", "#FC9F5B"])
-      .domain(["Basis", "UV", "IBD"]);
 
     // add the x Axis
     this.barchart.append("g")
@@ -184,7 +183,7 @@ export class barChart {
 
     this.x.domain(this.data.map(function(d) { return d.x; }));
     this.y.domain([0, d3.max(totals, x => x.value)]).nice();
-    // this.z.domain(keys);
+    this.z.domain(keys);
 
     let t = d3.transition("default")
       .duration(500);

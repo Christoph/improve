@@ -181,10 +181,10 @@ export class dualBarChart {
       })
       return s;
     })
-
+    
     this.x.domain(this.data.map(function(d) { return d.x; }));
     this.x_inner.domain(costs).rangeRound([0, this.x.bandwidth()]);
-    this.y.domain([0, d3.max(this.data, function(d) { return d3.max(costs, function(key) { return Object.values(d[key]).reduce((a, b) => a + b); }); })]).nice();
+    this.y.domain([0, d3.max(this.data, function(d) { return d3.max(costs, function(key) { return Object.values({ Basis: d["Basis"], ...d[key]}).reduce((a, b) => a + b); }); })]).nice();
 
     let t = d3.transition("default")
       .duration(500);
@@ -198,7 +198,7 @@ export class dualBarChart {
         .enter().append("g")
           .attr("transform", function(d) { return "translate(" + self.x(d.x) + ",0)"; })
         .selectAll("rect")
-        .data(function(d) { return costs.map(function(key) { return {key: key, value: Object.values(d[key]).reduce((a, b) => a + b)}}); })
+        .data(function(d) { return costs.map(function(key) { return {key: key, value: Object.values({ Basis: d["Basis"], ...d[key]}).reduce((a, b) => a + b)}}); })
 
       chart.enter().append("rect")
         .attr("x", function(d) { return self.x_inner(d.key); })
