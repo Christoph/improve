@@ -52,7 +52,6 @@ export class bars {
   }
 
   prepareData() {
-    console.log(this.data)
     let meds = Array.from(new Set(this.data.map(x => { return x["Med"]})));
     this.data_prepared.length = 0;
     this.data_prepared_dual.length = 0;
