@@ -25,6 +25,7 @@ export class bars {
         complete: function(results) {
           self.data = results.data
           // self.prepareData()
+          console.log("asd")
         }
       });
     });
