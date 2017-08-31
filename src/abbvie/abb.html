@@ -1,0 +1,20 @@
+<template>
+  <div>
+      Mitbewerber:
+      <select value.bind="other">
+        <option repeat.for="option of other_list" model.bind="option">${option}</option>
+      </select>
+
+      Kosten:
+      <select value.bind="costs">
+        <option repeat.for="option of costs_list" model.bind="option">${option}</option>
+      </select>
+  </div>
+
+  <div class="checkbox">
+    <label><input type="checkbox" checked.bind="uv_selected">UV</label>
+  </div>
+  <div class="checkbox">
+    <label><input type="checkbox" checked.bind="ibd_selected">IBD</label>
+  </div>
+</template>

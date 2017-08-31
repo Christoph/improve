@@ -7,7 +7,7 @@ export class App {
       config.title = "Improve";
       config.map([
           { route: "", moduleId: "empty/no-selection", nav: true, title: "Select" },
-          { route: "abb/", moduleId: "bars/bars", nav: true, title: "Abb", name: "abb" },
+          { route: "abb/", moduleId: "abbvie/abb", nav: true, title: "Abb", name: "abb" },
           { route: "vpsa/", moduleId: "vpsa/vpsa", nav: true, title: "SIR", name: "vpsa" }
       ]);
 
