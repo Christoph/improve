@@ -259,30 +259,6 @@ export class dynamicStackedBarChart {
     this.barchart.selectAll(".yAxis")
       .call(d3.axisLeft(this.y));
 
-    // Join
-    // let legend_group = this.legend
-    //   .selectAll("g")
-    //   .data(keys.reverse(), x => x)
-    //
-    // // Enter
-    // let legends = legend_group.enter().append("g")
-    //
-    // legends.append("rect")
-    //   .attr("x", this.width - 19)
-    //   .attr("width", 19)
-    //   .attr("height", 19)
-    //   .attr("fill", this.z);
-    //
-    // legends.append("text")
-    //   .attr("x", this.width - 24)
-    //   .attr("y", 9.5)
-    //   .attr("dy", "0.32em")
-    //   .text(function(d) { return d; });
-    //
-    // // Update
-    // legend_group.merge(legends).attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
-    //
-    // // Exit
-    // legend_group.exit().remove();
+
   }
 }

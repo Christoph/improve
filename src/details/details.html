@@ -2,22 +2,15 @@
   <require from="../charts/dynamic-stacked-bar-chart"></require>
 
   <div>
-      Mitbewerber:
-      <select value.bind="other">
-        <option repeat.for="option of other_list" model.bind="option">${option}</option>
+      Szenario:
+      <select value.bind="scenario">
+        <option repeat.for="option of scenario_list" model.bind="option">${option}</option>
       </select>
 
-      Kosten:
-      <select value.bind="costs">
-        <option repeat.for="option of costs_list" model.bind="option">${option}</option>
+      Zusatzerkrankung:
+      <select value.bind="add">
+        <option repeat.for="option of add_list" model.bind="option">${option}</option>
       </select>
-  </div>
-
-  <div class="checkbox">
-    <label><input type="checkbox" checked.bind="uv_selected">UV</label>
-  </div>
-  <div class="checkbox">
-    <label><input type="checkbox" checked.bind="ibd_selected">IBD</label>
   </div>
 
   <div style="width:100%; height:300px">

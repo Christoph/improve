@@ -5,10 +5,13 @@ import "jquery"
 @autoinject
 export class Details {
     // Constants
-    data_types = ["HUMIRA", "MITBEWERB"];
-    costs_list = [
-      "Jahres-Fabriksabgabepreis",
-      "Jahres-Kassenkaufpreis"
+    add_list = [
+      "UV",
+      "IBD"
+    ];
+    scenario_list = [
+      "Standart",
+      "Max"
     ];
 
     // Status
@@ -20,27 +23,16 @@ export class Details {
     data_stacked = <any>[];
 
     // Dropdowns
-    other_list = <any>[];
 
     // Observing changes in the ui
-    @observable uv_selected = true;
-    @observable ibd_selected = true;
-    @observable other;
-    @observable costs;
+    @observable scenario;
+    @observable add;
 
-    uv_selectedChanged() {
+    sceanrioChanged() {
       this.data_loaded ? this.prepareData() : null;
     }
 
-    ibd_selectedChanged() {
-      this.data_loaded ? this.prepareData() : null;
-    }
-
-    otherChanged() {
-      this.data_loaded ? this.prepareData() : null;
-    }
-
-    costsChanged() {
+    addChanged() {
       this.data_loaded ? this.prepareData() : null;
     }
 
@@ -63,8 +55,6 @@ export class Details {
           skipEmptyLines: true,
           complete: function(results) {
             self.praeparate = results.data
-            self.other_list = results.data.map(x => x["Produktname"]).slice(1)
-            self.other = self.other_list[0];
           }
         });
       });
@@ -74,7 +64,8 @@ export class Details {
         self.prepareData()
       })
 
-      self.costs = self.costs_list[0];
+      self.add = self.add_list[0];
+      self.scenario = self.scenario_list[0];
     }
 
     prepareData() {
@@ -99,11 +90,6 @@ export class Details {
           d["Typ"] == "Standart" &&
           d["Add"] == "UV" &&
           d["Med"] == "MITBEWERB")
-        let maximal = this.dataset.filter(
-          d => d["Area"] == m &&
-          d["Typ"] == "Max" &&
-          d["Add"] == "UV" &&
-          d["Med"] == "MITBEWERB")
 
         // Get Standart costs
         standart.forEach(x => {
@@ -112,7 +98,5 @@ export class Details {
 
         self.data_stacked.push(out)
       })
-
-      console.log(self.data_stacked)
     }
 }
