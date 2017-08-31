@@ -5,6 +5,10 @@ import "jquery"
 @autoinject
 export class Details {
     // Constants
+    med_list = [
+      "HUMIRA",
+      "MITBEWERB"
+    ];
     add_list = [
       "UV",
       "IBD"
@@ -27,12 +31,17 @@ export class Details {
     // Observing changes in the ui
     @observable scenario;
     @observable add;
+    @observable med;
 
-    sceanrioChanged() {
+    scenarioChanged() {
       this.data_loaded ? this.prepareData() : null;
     }
 
     addChanged() {
+      this.data_loaded ? this.prepareData() : null;
+    }
+
+    medChanged() {
       this.data_loaded ? this.prepareData() : null;
     }
 
@@ -66,6 +75,7 @@ export class Details {
 
       self.add = self.add_list[0];
       self.scenario = self.scenario_list[0];
+      self.med = self.med_list[0];
     }
 
     prepareData() {
@@ -83,13 +93,14 @@ export class Details {
         let out = {
           x: m,
         }
+        let standart = []
 
         // Get temorary datasets
-        let standart = this.dataset.filter(
+        standart = this.dataset.filter(
           d => d["Area"] == m &&
-          d["Typ"] == "Standart" &&
-          d["Add"] == "UV" &&
-          d["Med"] == "MITBEWERB")
+          d["Typ"] == self.scenario &&
+          d["Add"] == self.add &&
+          d["Med"] == self.med)
 
         // Get Standart costs
         standart.forEach(x => {

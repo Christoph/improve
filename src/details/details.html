@@ -2,6 +2,11 @@
   <require from="../charts/dynamic-stacked-bar-chart"></require>
 
   <div>
+      Humira/Mitbewerb:
+      <select value.bind="med">
+        <option repeat.for="option of med_list" model.bind="option">${option}</option>
+      </select>
+
       Szenario:
       <select value.bind="scenario">
         <option repeat.for="option of scenario_list" model.bind="option">${option}</option>
