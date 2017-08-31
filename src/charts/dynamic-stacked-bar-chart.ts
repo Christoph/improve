@@ -27,7 +27,7 @@ export class dynamicStackedBarChart {
   private x;
   private y;
   private z;
-  private legend;
+  private format;
 
   // set the dimensions and margins of the graph
   private width;
@@ -128,21 +128,8 @@ export class dynamicStackedBarChart {
       .attr("y", -4)
       .text("Kosten");
 
-
-    // // Add text
-    // this.barchart.append("text")
-    //   .attr("class", "bar_text")
-    //   .style("text-anchor", "middle")
-    //   // .attr("x", function(d) { return this.x(d.data.x); })
-    //   .text("test")
-    //   // .text(function(d) { return totals[d.data.x]; })
-
-    // add legend
-    this.legend = this.barchart.append("g")
-      .attr("font-family", "sans-serif")
-      .attr("font-size", 10)
-      .attr("text-anchor", "end")
-      .attr("class", "legend");
+    // Text format
+    this.format = d3.format(",.2f")
   }
 
   resizeChart() {
@@ -172,6 +159,7 @@ export class dynamicStackedBarChart {
 
     let keys = []
     let elements = []
+    let colors = new Map()
     // if (this.data.length > 0) keys = Object.getOwnPropertyNames(this.data[0]).slice(1);
     keys =  Array.from(new Set(self.data.map(item => item.x)));
 
@@ -202,6 +190,12 @@ export class dynamicStackedBarChart {
     this.data.forEach(d => {
       keys = Object.getOwnPropertyNames(d).slice(1);
       stacks.push({key: d.x, stack: d3.stack().keys(keys)([d])});
+
+      let c = d3.scaleOrdinal()
+        .range(["#33CA7F" ,"#ECE4B7", "#FC9F5B"])
+        .domain(keys)
+
+      colors.set(d.x, c)
     })
 
     let stack = d3.stack().keys(keys)(self.data)
@@ -216,13 +210,11 @@ export class dynamicStackedBarChart {
     // Enter
     let bars = chart.enter().append("g")
       .attr("class", "medikament")
-      // .attr("fill", function(d) { return self.z(d.key); })
-      .attr("fill", "steelblue" )
 
     bars.selectAll("rect")
              .data(function(d) { return d.stack; })
              .enter().append("rect")
-               .attr("x", function(d) { console.log(d); return self.x(d[0].data.x); })
+               .attr("x", function(d) { return self.x(d[0].data.x); })
                .attr("width", self.x.bandwidth())
                .attr("y", this.height)
                .attr("height", 0)
@@ -232,6 +224,16 @@ export class dynamicStackedBarChart {
       .transition(t)
       .attr("y", function(d) { return self.y(d[0][1]); })
       .attr("height", function(d) { return self.y(d[0][0]) - self.y(d[0][1]); })
+      .attr("fill", function(d) { return colors.get(d[0].data.x)(d.key); })
+
+    bars.selectAll("text")
+             .data(function(d) { return d.stack; })
+             .enter().append("text")
+               .style("text-anchor", "middle")
+               .style("fill", "black")
+               .attr("x", function(d) { return self.x(d[0].data.x) +self.x.bandwidth()/2; })
+               .attr("y", function(d) { return self.y(d[0][1]+(d[0][0] - d[0][1])/2) + 5; })
+               .text(function(d) { return d.key + " ("+ self.format(100/d3.sum(Object.values(d[0].data).slice(1))*d[0].data[d.key]) +"%)"})
 
     // Exit
     chart.exit().remove();
