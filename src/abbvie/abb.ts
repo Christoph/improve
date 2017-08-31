@@ -18,6 +18,7 @@ export class Abb {
     dataset = <any>[];
     praeparate = <any>[];
     data_dual = <any>[];
+    data_dual_total = <any>[];
 
     // Dropdowns
     other_list = <any>[];
@@ -82,6 +83,7 @@ export class Abb {
 
       // Empty plotting datasets
       self.data_dual.length = 0;
+      self.data_dual_total.length = 0;
 
       // Medications list
       let meds = ["HUMIRA"]
@@ -133,6 +135,56 @@ export class Abb {
         out["Max"] = max
 
         this.data_dual.push(out)
+      })
+
+      let all_meds = ["HUMIRA"]
+      all_meds.push( ...self.other_list)
+
+      all_meds.forEach(m => {
+        // Create basic object
+        let out = {
+          x: m,
+          Basis: +this.praeparate.filter(x => x["Produktname"] == m)[0][self.costs]
+        }
+        let std = {};
+        let max = {};
+
+        // Change encoding for data.csv file style names
+        if(m != "HUMIRA") {
+          m = "MITBEWERB"
+        }
+
+        // Get temorary datasets
+        let standart = this.dataset.filter(d => d["Med"] == m && d["Typ"] == "Standart")
+        let maximal = this.dataset.filter(d => d["Med"] == m && d["Typ"] == "Max")
+
+        // Get Standart costs
+        standart.forEach(x => {
+          if (self.ibd_selected && x["Add"] == "IBD") {
+            std["IBD"] = +x.KA + +x.FA + +x.MA;
+          }
+
+          if (self.uv_selected && x["Add"] == "UV") {
+            std["UV"] = +x.KA + +x.FA + +x.MA;
+          }
+        })
+
+        out["Standart"] = std
+
+        // Get maximal costs
+        maximal.forEach(x => {
+          if (this.ibd_selected && x["Add"] == "IBD") {
+            max["IBD"] = +x.KA + +x.FA + +x.MA;
+          }
+
+          if (this.uv_selected && x["Add"] == "UV") {
+            max["UV"] = +x.KA + +x.FA + +x.MA;
+          }
+        })
+
+        out["Max"] = max
+
+        this.data_dual_total.push(out)
       })
     }
 }
