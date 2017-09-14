@@ -195,11 +195,19 @@ export class Gauss {
     }
 
     private updateInData(mapping) {
+      if(this.inFilter.length > 0) {
         this.data_parallel
           .filter(x => this.inFilter.includes(x["id"]))
           .forEach(x => {
             x["highlight"] = mapping.get(x["id"])
           })
+      }
+      else {
+        this.data_parallel
+          .forEach(x => {
+            x["highlight"] = mapping.get(x["id"])
+          })
+      }
 
         this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
     }
