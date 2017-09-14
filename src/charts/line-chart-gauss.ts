@@ -83,10 +83,12 @@ export class LineChartGauss {
   dataMutated(splices) {
       if(this.data.length > 1) {
           this.updateChart();
+          this.focus.selectAll("path.focusline").remove()
       }
       else {
           this.svg.selectAll(".line").remove()
           this.focus.selectAll(".bar").remove()
+          this.focus.selectAll("path.focusline").remove()
       }
   }
 
@@ -164,9 +166,21 @@ export class LineChartGauss {
         .style("opacity", 0)
         .on("click", function(d) {
           let y = d3.mouse(this)[1];
+          let out = new Map();
 
           self.center = self.y.invert(y);
           self.updateGauss();
+
+          self.data.forEach(d => {
+            out.set(
+              d["id"],
+              self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.sigma))
+            )
+          })
+
+          self.brushing = out;
+
+          self.updateHighlight();
         })
         .moveToFront()
 
@@ -255,7 +269,6 @@ export class LineChartGauss {
 
   updateGauss() {
     let line_data = this.getGaussian();
-    let out = new Map();
     this.gauss_x.range(this.focus_x.domain()).domain(d3.extent(line_data, d => d["x"]))
 
     this.focus.selectAll("path.focusline").remove();
@@ -270,16 +283,6 @@ export class LineChartGauss {
       .attr("class", "focusline")
       .attr("d", (d) => this.focusline(d))
       .moveToFront();
-
-    this.data.forEach(d => {
-      out.set(
-        d["id"],
-        this.gradientColor(this.gaussian(this.gauss_y.invert(d.data[d.data.length-1][this.y_attribute]), this.gauss_y.invert(this.center), this.sigma))
-      )
-    })
-
-    this.brushing = out;
-    this.updateHighlight();
   }
 
   updateChart() {
