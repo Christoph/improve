@@ -24,6 +24,7 @@ export class Gauss {
     redraw_parallel;
 
     test = 100
+    inFilter = []
 
     // SIR Model
     TS = 1.0
@@ -173,7 +174,7 @@ export class Gauss {
     }
 
     brushing_parallelChanged() {
-        this.updateInData(this.brushing_parallel);
+        this.updateParallelData(this.brushing_parallel);
         this.filterOutData(this.brushing_parallel);
     }
 
@@ -193,23 +194,26 @@ export class Gauss {
     }
 
     private updateInData(mapping) {
+        this.data_parallel
+          .filter(x => this.inFilter.includes(x["id"]))
+          .forEach(x => {
+            x["highlight"] = mapping.get(x["id"])
+          })
+
+        this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
+    }
+
+    private updateParallelData(ids) {
+        this.inFilter = ids;
+
         this.data_parallel.forEach(x => {
-          x["highlight"] = mapping.get(x["id"])
+          if(ids.includes(x["id"])) {
+            x["highlight"] = 1;
+          }
+          else {
+            x["highlight"] = 0;
+          }
         })
-        
-        // for(let i = 0; i < this.data_length; i++) {
-        //     if(ids.length > 0) {
-        //         if(ids.includes(this.data_parallel[i]["id"])) {
-        //             this.data_parallel[i]["highlight"] = 1
-        //         }
-        //         else {
-        //             this.data_parallel[i]["highlight"] = 2
-        //         }
-        //     }
-        //     else {
-        //         this.data_parallel[i]["highlight"] = 1
-        //     }
-        // }
 
         this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
     }
