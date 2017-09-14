@@ -29,9 +29,8 @@
 .line {
   fill: none;
   stroke: steelblue;
-  stroke-width: 2px;
+  stroke-width: 1.5px;
   shape-rendering: crispEdges;
-  opacity: 0.5;
 }
 
 .focusline {

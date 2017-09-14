@@ -29,11 +29,13 @@ export class LineChartGauss {
   private focus_x;
   private gauss_x;
   private gauss_y;
+  private gradientColor;
   private valueline;
   private focusline;
   private histogram;
   private brush;
   private center = 1.0;
+  private sigma = 0.5;
 
   // set the dimensions and margins of the graph
   private width;
@@ -98,7 +100,7 @@ export class LineChartGauss {
       this.subscription.dispose();
   }
 
-  getGaussian(mean, sigma) {
+  getGaussian() {
     let data = [];
     // let rnd = d3.randomNormal();
     let rnd = d3.randomUniform(-3, 3);
@@ -106,15 +108,16 @@ export class LineChartGauss {
   // loop to populate data array with
   // probabily - quantile pairs
   for (var i = 0; i < 10000; i++) {
-      // let q = this.normal() // calc random draw from normal dist
-      let q = rnd() // calc random draw from normal dist
-      let p = this.gaussian(q, mean, sigma) // calc prob of rand draw
+      let q = rnd() // calc random draw from uniform dist
+      let p = this.gaussian(q, this.gauss_y.invert(this.center), this.sigma) // calc prob of rand draw
       let el = {
           "y": q,
           "x": p
       }
       data.push(el)
   };
+
+  this.gradientColor.domain([0, d3.max(data, x => x["x"])])
 
   // need to sort for plotting
   //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort
@@ -178,6 +181,10 @@ export class LineChartGauss {
 
     this.gauss_x = d3.scaleLinear()
     this.gauss_y = d3.scaleLinear()
+      .domain([-3, 3])
+
+    this.gradientColor = d3.scaleLinear()
+      .range([0, 1])
 
     // add the x Axis
     this.linechart.append("g")
@@ -238,26 +245,17 @@ export class LineChartGauss {
   }
 
   updateHighlight() {
+      let self = this;
 
       this.linechart.selectAll("path.line")
-          .classed("highlight", function(this, d) {
-              if(d["highlight"] == 1) { return true; }
-              else { return false; }
+          .attr("opacity", function(d) {
+            return d["highlight"]
           })
-          .classed("background", function(this, d) {
-              if(d["highlight"] == 2) { return true; }
-              else { return false; }
-          });
-
-        this.linechart.selectAll("path.line.highlight").moveToFront();
-        this.focus.selectAll("path.focusline").moveToFront();
   }
 
   updateGauss() {
-    this.gauss_y.range(this.y.domain()).domain([-3, 3])
-    
-    let line_data = this.getGaussian(this.gauss_y.invert(this.center), 0.5);
-
+    let line_data = this.getGaussian();
+    let out = new Map();
     this.gauss_x.range(this.focus_x.domain()).domain(d3.extent(line_data, d => d["x"]))
 
     this.focus.selectAll("path.focusline").remove();
@@ -272,6 +270,16 @@ export class LineChartGauss {
       .attr("class", "focusline")
       .attr("d", (d) => this.focusline(d))
       .moveToFront();
+
+    this.data.forEach(d => {
+      out.set(
+        d["id"],
+        this.gradientColor(this.gaussian(this.gauss_y.invert(d.data[d.data.length-1][this.y_attribute]), this.gauss_y.invert(this.center), this.sigma))
+      )
+    })
+
+    this.brushing = out;
+    this.updateHighlight();
   }
 
   updateChart() {
@@ -289,6 +297,8 @@ export class LineChartGauss {
 
     this.x.domain([x_min, x_max]);
     this.y.domain([y_min, y_max]);
+
+    this.gauss_y.range(this.y.domain())
 
     // let bins = this.histogram(focus_data)
     let bins = d3.histogram()

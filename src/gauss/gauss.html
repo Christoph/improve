@@ -1,7 +1,7 @@
 <template>
     <require from="./chart.css"></require>
     <require from="../charts/line-chart-gauss"></require>
-    <require from="../charts/parallel-coordinates-vertical"></require>
+    <require from="../charts/parallel-coordinates-gauss"></require>
 
     <div class="row">
         <div class="col-md-4">
@@ -56,10 +56,10 @@
                 </button>
             </div>
             <div style="width: 100%; height:500px">
-                <parallel-coordinates-vertical
+                <parallel-coordinates-gauss
                 brushing.bind="brushing_parallel"
                 redraw.bind="redraw_parallel"
-                data.bind="data_parallel"></parallel-coordinates-vertical>
+                data.bind="data_parallel"></parallel-coordinates-gauss>
             </div>
         </div>
         <div class="col-md-8">
@@ -72,7 +72,7 @@
                         y_attribute="pop"
                         data.bind="data_lines"></line-char-gauss>
                 </div>
-                <!-- <div class="col-md-6"style="width:100%; height:300px">
+                <div class="col-md-6"style="width:100%; height:300px">
                     <line-chart-gauss
                         brushing.bind="brushing_sus"
                         redraw.bind="redraw_sus"
@@ -80,10 +80,10 @@
                         x_attribute="x"
                         y_attribute="sus"
                         data.bind="data_lines"></line-chart-gauss>
-                                </div> -->
+                                </div>
                             </div>
             <div class="row">
-                <!-- <div class="col-md-6"style="width:100%; height:300px">
+                <div class="col-md-6"style="width:100%; height:300px">
                     <line-chart-gauss
                         brushing.bind="brushing_inf"
                         redraw.bind="redraw_inf"
@@ -100,7 +100,7 @@
                         x_attribute="x"
                         y_attribute="rec"
                         data.bind="data_lines"></line-chart-gauss>
-                </div> -->
+                </div>
             </div>
         </div>
     </div>
