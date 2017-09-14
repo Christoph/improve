@@ -176,6 +176,7 @@ export class Gauss {
     brushing_parallelChanged() {
         this.updateParallelData(this.brushing_parallel);
         this.filterOutData(this.brushing_parallel);
+        // this.redrawLinecharts();
     }
 
     redrawLinecharts() {
@@ -206,14 +207,21 @@ export class Gauss {
     private updateParallelData(ids) {
         this.inFilter = ids;
 
-        this.data_parallel.forEach(x => {
-          if(ids.includes(x["id"])) {
+        if(ids.length > 0) {
+          this.data_parallel.forEach(x => {
+            if(ids.includes(x["id"])) {
+              x["highlight"] = 1;
+            }
+            else {
+              x["highlight"] = 0;
+            }
+          })
+        }
+        else {
+          this.data_parallel.forEach(x => {
             x["highlight"] = 1;
-          }
-          else {
-            x["highlight"] = 0;
-          }
-        })
+          })
+        }
 
         this.redraw_parallel = this.redraw_parallel == 0 ? 1 : 0;
     }
