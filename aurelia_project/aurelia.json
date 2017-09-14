@@ -194,6 +194,12 @@
               "deps": ["d3"]
           },
           {
+              "name": "d3-random",
+              "path": "../node_modules/d3-random/build",
+              "main": "d3-random.min",
+              "deps": ["d3"]
+          },
+          {
               "name": "ion-rangeslider",
               "path": "../node_modules/ion-rangeslider",
               "main": "js/ion.rangeSlider",
