@@ -1,4 +1,5 @@
 import {autoinject} from 'aurelia-framework';
+import {Sampling} from "../helper/sampling"
 import * as d3 from "d3"
 
 // This magic line removed the error messages for numeric
@@ -12,6 +13,7 @@ export class SIR {
   private INPUT;
   public time_range = <any[]> [];
   public params = <any[]> [];
+  private sampling;
 
   // Params for the computations
   private rho;
@@ -31,11 +33,13 @@ export class SIR {
       for (let i = 0; i < this.ND; i++) {
           this.time_range.push(i)
       }
+
+      this.sampling = new Sampling("sobol");
   }
 
   compute_model(n_samples) {
     let out = <any[]> [];
-    this.get_params(n_samples);
+    this.get_params(this.sampling.get_points(n_samples, 5))
 
     this.params.forEach( d => {
         this.rho = d[0];
@@ -63,41 +67,31 @@ export class SIR {
     return Y
   }
 
-  private get_params(n_samples) {
-      let seq = lobos.Sobol(5)
+  private get_params(points) {
+    let rho_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.rho_range);
+    let v_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.v_range);
+    let mu_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.mu_range);
+    let beta_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.beta_range);
+    let gamma_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.gamma_range);
 
-      return this.getParamsFromSobol(seq.take(n_samples))
-  }
-
-  private getParamsFromSobol(points) {
-      let rho_scale = d3.scaleLinear()
-        .domain([0, 1])
-        .range(this.rho_range);
-      let v_scale = d3.scaleLinear()
-        .domain([0, 1])
-        .range(this.v_range);
-      let mu_scale = d3.scaleLinear()
-        .domain([0, 1])
-        .range(this.mu_range);
-      let beta_scale = d3.scaleLinear()
-        .domain([0, 1])
-        .range(this.beta_range);
-      let gamma_scale = d3.scaleLinear()
-        .domain([0, 1])
-        .range(this.gamma_range);
-
-      points.forEach( d => {
-          this.params.push([
-              Math.round(rho_scale(d[0]))/100,
-              1/(Math.round(v_scale(d[1]))*365),
-              1/(Math.round(mu_scale(d[2]))*365),
-              beta_scale(d[3]),
-              1/Math.round(gamma_scale(d[4]))
-          ])
-      })
-  }
-
-  private getRandom(n, min, max) {
-      return Array.from({length: n}, () => Math.random() * (max - min) + min);
+    points.forEach( d => {
+        this.params.push([
+            Math.round(rho_scale(d[0]))/100,
+            1/(Math.round(v_scale(d[1]))*365),
+            1/(Math.round(mu_scale(d[2]))*365),
+            beta_scale(d[3]),
+            1/Math.round(gamma_scale(d[4]))
+        ])
+    })
   }
 }
