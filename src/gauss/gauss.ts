@@ -25,7 +25,7 @@ export class Gauss {
     ND = this.NY*365
 
     S0 = 0.1
-    I0 = 1e-4
+    I0 = 1e-2
     R0 = 1 - this.S0 - this.I0
 
     // Mortality probabilty, I dies before natural death or recovery
