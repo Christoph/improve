@@ -41,6 +41,14 @@ export class Drift {
 
     current_filter = new Set();
 
+    collapsed_input = false;
+    collapsed_parallel = false;
+
+    switch() {
+      this.collapsed_input = this.collapsed_input == true ? false : true;
+      this.collapsed_parallel = this.collapsed_parallel == true ? false : true;
+    }
+
     attached() {
         // Attaching range sliders
         $("#pop").ionRangeSlider({
@@ -170,6 +178,8 @@ export class Drift {
     }
 
     compute() {
+        this.collapsed_input = true;
+        
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)
 

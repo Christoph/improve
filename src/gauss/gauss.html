@@ -3,13 +3,14 @@
     <require from="../charts/line-chart-gauss"></require>
     <require from="../charts/parallel-coordinates-gauss"></require>
 
+    <h2>Compute SIR Model</h2>
+    <span>The SIR model is one of the simplest compartmental models, and many models are derivations of this basic form. The model consists of three compartments– S for the number susceptible, I for the number of infectious, and R for the number recovered (or immune).</span>
+    <hr>
     <div class="row">
         <div class="col-md-4">
-            <div>
-                <h2>Compute SIR Model</h2>
-                <span>The SIR model is one of the simplest compartmental models, and many models are derivations of this basic form. The model consists of three compartments– S for the number susceptible, I for the number of infectious, and R for the number recovered (or immune).</span>
-                <br>
-                <br>
+          <button class="btn btn-default btn-block" click.delegate="switch()">Toggle Parameter Selection</button>
+          <div aubs-collapse="collapsed.bind: collapsed_input">
+            <div style="margin-left:15px; margin-right:15px">
                 <label>Rho: Probabilty that an infected person dies before natural death or recovery.</label>
                 <div class="row">
                         <input type="text" id="rho"/>
@@ -54,16 +55,20 @@
                 <br>
                 <label for="#sobol">Number of sobol samples:</label>
                 <input type="number" value.bind="sobol_n" id="sobol" step="1"><br>
-                <button type="button" click.delegate="vspa()">
+                <button class="btn btn-primary btn-block" click.delegate="vspa()">
                     Compute Samples
                 </button>
             </div>
+          </div>
+
+          <div aubs-collapse="collapsed.bind: collapsed_parallel">
             <div style="width: 100%; height:500px">
                 <parallel-coordinates-gauss
                 brushing.bind="brushing_parallel"
                 redraw.bind="redraw_parallel"
                 data.bind="data_parallel"></parallel-coordinates-gauss>
             </div>
+          </div>
         </div>
         <div class="col-md-8">
             <div class="row">

@@ -64,6 +64,14 @@ export class Gauss {
 
     current_filter = new Set();
 
+    collapsed_input = false;
+    collapsed_parallel = false;
+
+    switch() {
+      this.collapsed_input = this.collapsed_input == true ? false : true;
+      this.collapsed_parallel = this.collapsed_parallel == true ? false : true;
+    }
+
     attached() {
         // Attaching range sliders
         $("#rho").ionRangeSlider({
@@ -239,6 +247,7 @@ export class Gauss {
     }
 
     vspa() {
+
         // Create model params
         let sir = new SIR(
           [this.rho_from, this.rho_to],
@@ -283,5 +292,7 @@ export class Gauss {
 
           this.data_length = this.data_lines_original.length;
           this.filterOutData([])
+
+          this.collapsed_input = true;
         }
 }

@@ -3,13 +3,14 @@
     <require from="../charts/line-chart-gauss"></require>
     <require from="../charts/parallel-coordinates-gauss"></require>
 
+    <h2>Compute Genetic Drift</h2>
+    <span>Genetic drift is the change in allele frequencies due to random chance events. The simulations are based on a "one locus, two alleles" model, and p denotes the frequency of one of the alleles. <a href="http://www.natureincode.com/code/3/visual_genetic_drift_multiple.html">source</a> </span>
+    <hr>
     <div class="row">
         <div class="col-md-4">
-            <div>
-                <h2>Compute Genetic Drift</h2>
-                <span>Genetic drift is the change in allele frequencies due to random chance events. The simulations are based on a "one locus, two alleles" model, and p denotes the frequency of one of the alleles. <a href="http://www.natureincode.com/code/3/visual_genetic_drift_multiple.html">source</a> </span>
-                <br>
-                <br>
+          <button class="btn btn-default btn-block" click.delegate="switch()">Toggle Parameter Selection</button>
+          <div aubs-collapse="collapsed.bind: collapsed_input">
+            <div style="margin-left:15px; margin-right:15px">
                 <label>Total Population Size</label>
                 <div class="row">
                     <input type="text" id="pop"/>
@@ -36,16 +37,21 @@
                     </div>
                 </div>
                 <br>
-                <button type="button" click.delegate="compute()">
+                <button class="btn btn-primary btn-block" click.delegate="compute()">
                     Compute Samples
                 </button>
             </div>
+          </div>
+
+          <div aubs-collapse="collapsed.bind: collapsed_parallel">
             <div style="width: 100%; height:500px">
                 <parallel-coordinates-gauss
                 brushing.bind="brushing_parallel"
                 redraw.bind="redraw_parallel"
                 data.bind="data_parallel"></parallel-coordinates-gauss>
             </div>
+          </div>
+
         </div>
         <div class="col-md-8">
           <div class="row">
