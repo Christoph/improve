@@ -8,6 +8,7 @@ export class LineChartGauss {
   @bindable margin = { top: 20, right: 60, bottom: 35, left: 60, middle: 20 };
   @bindable x_attribute = "x";
   @bindable y_attribute = "y";
+  @bindable x_label = "days";
   @bindable redraw = 0;
 
   // Two-Way
@@ -210,7 +211,7 @@ export class LineChartGauss {
           .style("text-anchor", "middle")
           .attr("y", this.height+26)
           .attr("x", this.width/2)
-          .text("days");
+          .text(this.x_label);
 
       // add the x Axis
       this.focus.append("g")
