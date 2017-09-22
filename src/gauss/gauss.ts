@@ -1,5 +1,6 @@
 import {autoinject, observable} from 'aurelia-framework';
 import "ion-rangeslider"
+import {SIR} from "../models/sir"
 import * as d3 from "d3"
 
 // This magic line removed the error messages for numeric
@@ -74,7 +75,6 @@ export class Gauss {
     lines = <any[]> []
     parallel = <any[]> []
 
-    all_ids = new Set();
     current_filter = new Set();
 
     attached() {
@@ -252,51 +252,38 @@ export class Gauss {
     }
 
     vspa() {
-        // Update variables
-        this.ND = this.NY*365
-        this.R0 = 1 - this.S0 - this.I0
-        this.INPUT = [+this.S0, +this.I0, +this.R0]
+        // Create model params
+        let sir = new SIR(
+          [this.rho_from, this.rho_to],
+          [this.v_from, this.v_to],
+          [this.mu_from, this.mu_to],
+          [this.beta_from, this.beta_to],
+          [this.gamma_from, this.gamma_to],
+          this.NY, this.S0, this.I0)
 
-        let params = this.get_params("sobol")
-        let time_range = <any[]> []
+          let model = sir.compute_model(this.sobol_n)
 
-        for (let i = 0; i < this.ND; i++) {
-            time_range.push(i)
-        }
-
-        params.forEach( (d, run) => {
-            this.rho = d[0];
-            this.v = d[1];
-            this.mu = d[2];
-            this.beta = d[3];
-            this.gamma = d[4];
-
-            let sol = numeric.dopri(0, this.ND, this.INPUT, this.SIR, 1e-6, 5000);
-
-            let out = sol.at(time_range)
-
+          model.forEach( (sol, run) => {
             let temp = <any[]> []
-            for (let i = 0; i < out.length; i++) {
+            for (let i = 0; i < sol.length; i++) {
                 temp.push({
-                    "x": time_range[i],
-                    "sus": out[i][0],
-                    "inf": out[i][1],
-                    "rec": out[i][2],
-                    "pop": out[i][0] + out[i][1] + out[i][2]
+                    "x": sir.time_range[i],
+                    "sus": sol[i][0],
+                    "inf": sol[i][1],
+                    "rec": sol[i][2],
+                    "pop": sol[i][0] + sol[i][1] + sol[i][2]
                 })
             }
-
-            this.all_ids.add(run)
 
             this.data_parallel.push({
                     "id": run,
                     "highlight": 0,
                     "data": {
-                        "rho": this.rho,
-                        "v": this.v,
-                        "mu": this.mu,
-                        "beta": this.beta,
-                        "gamma": this.gamma
+                        "rho": sir.params[run][0],
+                        "v": sir.params[run][1],
+                        "mu": sir.params[run][2],
+                        "beta": sir.params[run][3],
+                        "gamma": sir.params[run][4]
                     }
             })
 
@@ -305,98 +292,9 @@ export class Gauss {
                     "highlight": 0,
                     "data": temp
             })
-        })
+          })
 
-        this.data_length = this.data_lines_original.length;
-        this.filterOutData([])
-    }
-
-
-    private SIR = (t, INP) => {
-    	let Y = [0, 0 ,0]
-    	let V = INP
-
-        Y[0] = this.v - this.beta * V[0] * V[1] / V.reduce((a,b) => a + b, 0) - this.mu * V[0]
-    	Y[1] = this.beta * V[0] * V[1] / V.reduce((a,b) => a + b, 0) - (this.gamma + this.mu) * V[1]/(1-this.rho)
-    	Y[2] = this.gamma * V[1] - this.mu * V[2]
-
-    	return Y
-    }
-
-    cartesian(arg) {
-        let r = <any[]> [];
-        // let arg = arguments;
-        let max = arg.length-1;
-
-        function helper(arr, i) {
-            for (var j=0, l=arg[i].length; j<l; j++) {
-                var a = arr.slice(0); // clone arr
-                a.push(arg[i][j]);
-                if (i==max)
-                    r.push(a);
-                else
-                    helper(a, i+1);
-            }
+          this.data_length = this.data_lines_original.length;
+          this.filterOutData([])
         }
-        helper([], 0);
-        return r;
-    }
-
-    getRandom(n, min, max) {
-        return Array.from({length: n}, () => Math.random() * (max - min) + min);
-    }
-
-    getRandomInt(n, min, max) {
-        return Array.from({length: n}, () => Math.floor(Math.random() * (max - min + 1)) + min);
-    }
-
-    getParamsFromSobol(points) {
-        let params = <any>[];
-
-        let rho_scale = d3.scaleLinear()
-          .domain([0, 1])
-          .range([this.rho_from, this.rho_to]);
-        let v_scale = d3.scaleLinear()
-          .domain([0, 1])
-          .range([this.v_from, this.v_to]);
-        let mu_scale = d3.scaleLinear()
-          .domain([0, 1])
-          .range([this.mu_from, this.mu_to]);
-        let beta_scale = d3.scaleLinear()
-          .domain([0, 1])
-          .range([this.beta_from, this.beta_to]);
-        let gamma_scale = d3.scaleLinear()
-          .domain([0, 1])
-          .range([this.gamma_from, this.gamma_to]);
-
-        points.forEach( d => {
-            params.push([
-                Math.round(rho_scale(d[0]))/100,
-                1/(Math.round(v_scale(d[1]))*365),
-                1/(Math.round(mu_scale(d[2]))*365),
-                beta_scale(d[3]),
-                1/Math.round(gamma_scale(d[4]))
-            ])
-        })
-
-        return params
-    }
-
-    get_params(sampling) {
-        if(sampling == "rnd") {
-            let rho = this.getRandom(this.rho_n, this.rho_from/100, this.rho_to/100)
-            let v = this.getRandom(this.v_n, 1/(this.v_from*365), 1/(this.v_to*365))
-            let mu = this.getRandom(this.mu_n, 1/(this.mu_from*365), 1/(this.mu_to*365))
-            let beta = this.getRandom(this.beta_n, this.beta_from, this.beta_to)
-            let gamma = this.getRandom(this.gamma_n, 1/this.gamma_from, 1/this.gamma_to)
-
-            return this.cartesian([rho, v, mu, beta, gamma]);
-        }
-
-        if(sampling == "sobol") {
-            let seq = lobos.Sobol(5)
-
-            return this.getParamsFromSobol(seq.take(this.sobol_n))
-        }
-    }
 }
