@@ -174,7 +174,7 @@ export class parallelCoordinatesVertical {
 
             this.x[dim] = d3.scaleLinear()
                     .range([this.width, 0])
-                    .domain(ext)
+                    .domain([ext[1], ext[0]])
         });
 
         // Create the x axis
