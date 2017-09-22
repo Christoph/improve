@@ -4,7 +4,7 @@ import {SIR} from "../models/sir"
 import * as d3 from "d3"
 
 @autoinject
-export class Gauss {
+export class Drift {
     @observable brushing_pop;
     @observable brushing_sus;
     @observable brushing_inf;
