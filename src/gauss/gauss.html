@@ -70,6 +70,7 @@
                         redraw.bind="redraw_pop"
                         x_attribute="x"
                         y_attribute="pop"
+                        y_label="Population"
                         data.bind="data_lines"></line-char-gauss>
                 </div>
                 <div class="col-md-6"style="width:100%; height:300px">
@@ -79,6 +80,7 @@
                         mo.bind="test"
                         x_attribute="x"
                         y_attribute="sus"
+                        y_label="Susceptibility"
                         data.bind="data_lines"></line-chart-gauss>
                                 </div>
                             </div>
@@ -90,6 +92,7 @@
                         mo.bind="test"
                         x_attribute="x"
                         y_attribute="inf"
+                        y_label="Infected"
                         data.bind="data_lines"></line-chart-gauss>
                                 </div>
                 <div class="col-md-6"style="width:100%; height:300px">
@@ -99,6 +102,7 @@
                         mo.bind="test"
                         x_attribute="x"
                         y_attribute="rec"
+                        y_label="Recovered"
                         data.bind="data_lines"></line-chart-gauss>
                 </div>
             </div>
