@@ -9,9 +9,6 @@ declare var lobos: any;
 
 @autoinject
 export class Gauss {
-    // VPSA
-    param1 = 1;
-    param2 = 1;
     @observable brushing_pop;
     @observable brushing_sus;
     @observable brushing_inf;
@@ -24,7 +21,6 @@ export class Gauss {
     @observable brushing_parallel;
     redraw_parallel;
 
-    test = 100
     inFilter = []
 
     // SIR Model
@@ -65,15 +61,10 @@ export class Gauss {
     // Sobol sampling
     sobol_n = 100
 
-    INPUT = [this.S0, this.I0, this.R0]
-
     data_parallel = <any[]> []
     data_lines = <any[]> []
     data_lines_original = <any[]> []
     data_length = 0;
-
-    lines = <any[]> []
-    parallel = <any[]> []
 
     current_filter = new Set();
 
