@@ -101,7 +101,7 @@ export class parallelCoordinatesGauss {
                   extent = [x[d].invert(brush_selection[1]), x[d].invert(brush_selection[0])]
                 }
 
-              let brushed_elements = dat.filter(x => x["data"][d] >= extent[0] && x["data"][d] <= extent[1])
+              let brushed_elements = dat.filter(x => x["data"][d] >= extent[1] && x["data"][d] <= extent[0])
 
               brushes.set(d, brushed_elements.map(x => x["id"]))
           });

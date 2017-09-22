@@ -94,6 +94,11 @@ export class Drift {
         this.updateInData(this.brushing_pop);
     }
 
+    brushing_parallelChanged() {
+        this.updateParallelData(this.brushing_parallel);
+        this.filterOutData(this.brushing_parallel);
+    }
+
     redrawLinecharts() {
         this.redraw_p = this.redraw_p == 0 ? 1 : 0;
         this.redraw_pop = this.redraw_pop == 0 ? 1 : 0;
