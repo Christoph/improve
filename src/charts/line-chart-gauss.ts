@@ -78,7 +78,6 @@ export class LineChartGauss {
       this.focus_offset = this.lc_width + this.margin.middle + this.margin.left;
 
       this.initChart()
-      this.updateChart();
   }
 
   // Update the chart if the data changes
@@ -258,6 +257,17 @@ export class LineChartGauss {
         .y((d) => this.y(this.gauss_y(d["y"])));
 
     let y_attribute = this.y_attribute
+
+    // Update axis
+    this.linechart.selectAll(".xAxis")
+      .call(d3.axisBottom(this.x));
+    this.linechart.selectAll(".yAxis")
+      .call(d3.axisLeft(this.y));
+
+    this.focus.selectAll(".yAxis")
+        .call(d3.axisRight(this.y));
+    this.focus.selectAll(".xAxis")
+        .call(d3.axisBottom(this.focus_x).ticks(2));
   }
 
   updateHighlight() {
