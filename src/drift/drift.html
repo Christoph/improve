@@ -6,52 +6,33 @@
     <div class="row">
         <div class="col-md-4">
             <div>
-                <h2>Compute SIR</h2>
-                <label>Rho: Probabilty that an infected person dies before natural death or recovery.</label>
+                <h2>Compute Genetic Drift</h2>
+                <span>Genetic drift is the change in allele frequencies due to random chance events. The simulations are based on a "one locus, two alleles" model, and p denotes the frequency of one of the alleles. <a href="http://www.natureincode.com/code/3/visual_genetic_drift_multiple.html">source</a> </span>
+                <br>
+                <br>
+                <label>Total Population Size</label>
                 <div class="row">
-                        <input type="text" id="rho"/>
+                    <input type="text" id="pop"/>
                 </div>
-
-                <label>V: Per captia death rate from natural causes.</label>
+                <label>Chance of a catastrophic event within a generation</label>
                 <div class="row">
-                        <input type="text" id="v"/>
-                </div>
-
-                <label>Mu: Population birth rate.</label>
-                <div class="row">
-                        <input type="text" id="mu"/>
-                </div>
-
-                <label>Beta: Transmission rate: Infected -> Susceptible. Includes encounter and transmission rate.</label>
-                <div class="row">
-                        <input type="text" id="beta"/>
-                </div>
-
-                <label>Gamma: Recovery rate.</label>
-                <div class="row">
-                    <input type="text" id="gamma"/>
+                    <input type="text" id="event"/>
                 </div>
 
                 <br>
                 <label>Starting Conditions</label>
                 <div class="row">
                     <div class="col-sm-3">
-                        <label for="#param1">S0: </label>
-                        <input style="width: 50px" type="number" value.bind="S0" id="param1" step="0.01"><br>
+                        <label for="#param1">Simulations: </label>
+                        <input style="width: 50px" type="number" value.bind="simulations" id="param1" step="1"><br>
                     </div>
                     <div class="col-sm-3">
-                        <label for="#param2">I0: </label>
-                        <input style="width: 60px" type="number" value.bind="I0" id="param2" step="0.0001"><br>
-                    </div>
-                    <div class="col-sm-6">
-                        <label for="#param5">Time in years: </label>
-                        <input style="width: 50px" type="number" value.bind="NY" id="param5" step="1"><br>
+                        <label for="#param2">Generations: </label>
+                        <input style="width: 60px" type="number" value.bind="generations" id="param2" step="1"><br>
                     </div>
                 </div>
                 <br>
-                <label for="#sobol">Number of sobol samples:</label>
-                <input type="number" value.bind="sobol_n" id="sobol" step="1"><br>
-                <button type="button" click.delegate="vspa()">
+                <button type="button" click.delegate="compute()">
                     Compute Samples
                 </button>
             </div>
@@ -63,45 +44,26 @@
             </div>
         </div>
         <div class="col-md-8">
-            <div class="row">
-                <div class="col-md-6" style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_pop"
-                        redraw.bind="redraw_pop"
-                        x_attribute="x"
-                        y_attribute="pop"
-                        data.bind="data_lines"></line-char-gauss>
-                </div>
-                <div class="col-md-6"style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_sus"
-                        redraw.bind="redraw_sus"
-                        mo.bind="test"
-                        x_attribute="x"
-                        y_attribute="sus"
-                        data.bind="data_lines"></line-chart-gauss>
-                                </div>
-                            </div>
-            <div class="row">
-                <div class="col-md-6"style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_inf"
-                        redraw.bind="redraw_inf"
-                        mo.bind="test"
-                        x_attribute="x"
-                        y_attribute="inf"
-                        data.bind="data_lines"></line-chart-gauss>
-                                </div>
-                <div class="col-md-6"style="width:100%; height:300px">
-                    <line-chart-gauss
-                        brushing.bind="brushing_rec"
-                        redraw.bind="redraw_rec"
-                        mo.bind="test"
-                        x_attribute="x"
-                        y_attribute="rec"
-                        data.bind="data_lines"></line-chart-gauss>
-                </div>
+          <div class="row">
+            <div class="col-md-6" style="width:100%; height:300px">
+                <line-chart-gauss
+                    brushing.bind="brushing_p"
+                    redraw.bind="redraw_p"
+                    x_attribute="x"
+                    y_attribute="p"
+                    x_label="Generation"
+                    data.bind="data_lines"></line-char-gauss>
             </div>
+            <div class="col-md-6" style="width:100%; height:300px">
+                <line-chart-gauss
+                    brushing.bind="brushing_pop"
+                    redraw.bind="redraw_pop"
+                    x_attribute="x"
+                    y_attribute="pop"
+                    x_label="Effective Population"
+                    data.bind="data_lines"></line-char-gauss>
+            </div>
+          </div>
         </div>
     </div>
 
