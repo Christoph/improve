@@ -27,6 +27,10 @@ export class Drift {
     event_from = 0.1;
     event_to = 0.2;
 
+    // Leftover individuals after event
+    leftover_from = 1;
+    leftover_to = 10;
+
     // Sobol sampling
     sobol_n = 100
 
@@ -41,7 +45,7 @@ export class Drift {
         // Attaching range sliders
         $("#pop").ionRangeSlider({
             min: 1,
-            max: 10000,
+            max: 2000,
             from: 500,
             to: 1000,
             step: 1,
@@ -64,6 +68,19 @@ export class Drift {
             onFinish: (data) => {
             this.event_from = data["from"]
             this.event_to = data["to"]
+        }});
+        $("#leftover").ionRangeSlider({
+            min: 1,
+            max: 50,
+            from: 1,
+            to: 10,
+            step: 1,
+            type: "double",
+            grid: true,
+            grid_num: 10,
+            onFinish: (data) => {
+            this.leftover_from = data["from"]
+            this.leftover_to = data["to"]
         }});
     }
 
@@ -149,9 +166,9 @@ export class Drift {
 
     compute() {
         // Create model params
-        let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], this.generations)
+        let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)
 
-        let model = gen.compute_model(this.simulations)
+        let model = gen.compute_model()
 
         model.forEach( (sol, run) => {
           let temp = <any[]> []
@@ -168,7 +185,8 @@ export class Drift {
                   "highlight": 0,
                   "data": {
                       "pop": gen.params[run][0],
-                      "prob": gen.params[run][1]
+                      "P(event)": gen.params[run][1],
+                      "Remaining": gen.params[run][2]
                   }
           })
 

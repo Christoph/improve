@@ -13,10 +13,9 @@ export class Genetic {
   time_range = [];
   populations = [];
   rnd;
-
   sampling;
 
-  constructor(private event_range, private population_range, private generations) {
+  constructor(private event_range, private population_range, private leftover_range, private generations, private n_samples) {
     for(let i = 0; i < this.generations; i++) {
       this.time_range.push(i);
     }
@@ -25,9 +24,9 @@ export class Genetic {
     this.rnd = d3.randomUniform();
   }
 
-  compute_model(n_samples) {
+  compute_model() {
     let out = [];
-    this.get_params(this.sampling.get_points(n_samples, 2))
+    this.get_params(this.sampling.get_points(this.n_samples, 3))
 
     this.params.forEach( d => {
       this.populations.length = 0;
@@ -45,7 +44,7 @@ export class Genetic {
 
       for (let i = 1; i < this.generations+1; i++) {
         if(this.rnd()<params[1]) {
-          population_size = 10;
+          population_size = Math.round(params[2])
         }
         else {
           population_size = params[0]
@@ -100,10 +99,15 @@ export class Genetic {
       .domain([0, 1])
       .range(this.event_range);
 
+    let leftover_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.leftover_range);
+
     points.forEach( d => {
         this.params.push([
             pop_scale(d[0]),
-            event_scale(d[1])
+            event_scale(d[1]),
+            leftover_scale(d[2])
         ])
     })
   }
