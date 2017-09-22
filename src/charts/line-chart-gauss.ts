@@ -9,6 +9,7 @@ export class LineChartGauss {
   @bindable x_attribute = "x";
   @bindable y_attribute = "y";
   @bindable x_label = "days";
+  @bindable y_label = "y";
   @bindable redraw = 0;
 
   // Two-Way
@@ -233,7 +234,7 @@ export class LineChartGauss {
     this.linechart.append("text")
         .style("text-anchor", "middle")
         .attr("y", -4)
-        .text((d) => { return this.y_attribute});
+        .text(this.y_label);
 
     // add the y Axis
     this.focus.append("g")
