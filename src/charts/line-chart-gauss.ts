@@ -38,6 +38,7 @@ export class LineChartGauss {
   private histogram;
   private brush;
   private center = 1.0;
+  private weight = 1.0;
   private sigma = 0.5;
 
   // set the dimensions and margins of the graph
@@ -109,9 +110,11 @@ export class LineChartGauss {
     // let rnd = d3.randomNormal();
     let rnd = d3.randomUniform(-3, 3);
 
+    console.log(this.weight)
+
   // loop to populate data array with
   // probabily - quantile pairs
-  for (var i = 0; i < 10000; i++) {
+  for (var i = 0; i < 5000; i++) {
       let q = rnd() // calc random draw from uniform dist
       let p = this.gaussian(q, this.gauss_y.invert(this.center), this.sigma) // calc prob of rand draw
       let el = {
@@ -169,12 +172,14 @@ export class LineChartGauss {
         .on("mousedown", function(d) {
           let out = new Map();
           self.center = self.y.invert(d3.mouse(this)[1]);
+          self.weight = self.focus_x.invert(d3.mouse(this)[0]);
           self.updateGauss();
 
           self.mouse_event = d3.select(this)
           .on("mousemove", function(d) {
             let out = new Map();
             self.center = self.y.invert(d3.mouse(this)[1]);
+            self.weight = self.focus_x.invert(d3.mouse(this)[0]);
             self.updateGauss();
 
             self.data.forEach(d => {
@@ -190,20 +195,9 @@ export class LineChartGauss {
           })
           .on("mouseup", function(d) {
             self.mouse_event.on("mousemove", null).on("mouseup", null);
-          //
-          //   self.center = self.y.invert(d3.mouse(this)[1]);
-          //   self.updateGauss();
-          //
-          //   self.data.forEach(d => {
-          //     out.set(
-          //       d["id"],
-          //       self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.sigma))
-          //     )
-          //   })
-          //
-          //   self.brushing = out;
-          //
-          //   self.updateHighlight();
+          })
+          .on("mouseleave", function(d) {
+            self.mouse_event.on("mousemove", null).on("mouseup", null);
           })
         })
         .moveToFront()
