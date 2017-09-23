@@ -18,7 +18,12 @@ export class Gauss {
     redraw_parallel;
 
     inFilter = []
-    outFilter = new Map();
+    outFilterList = new Map([
+      ["pop", new Map()],
+      ["sus", new Map()],
+      ["inf", new Map()],
+      ["rec", new Map()]
+    ]);
 
     // SIR Model
     TS = 1.0
@@ -150,22 +155,22 @@ export class Gauss {
     }
 
     brushing_popChanged() {
-        this.updateOutData(this.brushing_pop);
+        this.updateOutData(this.brushing_pop, "pop");
         this.updateInData(this.brushing_pop);
     }
 
     brushing_susChanged() {
-        this.updateOutData(this.brushing_sus);
+        this.updateOutData(this.brushing_sus, "sus");
         this.updateInData(this.brushing_sus);
     }
 
     brushing_recChanged() {
-        this.updateOutData(this.brushing_rec);
+        this.updateOutData(this.brushing_rec, "rec");
         this.updateInData(this.brushing_rec);
     }
 
     brushing_infChanged() {
-        this.updateOutData(this.brushing_inf);
+        this.updateOutData(this.brushing_inf, "inf");
         this.updateInData(this.brushing_inf);
     }
 
@@ -182,20 +187,31 @@ export class Gauss {
         this.redraw_sus = this.redraw_sus == 0 ? 1 : 0;
     }
 
-    private updateOutData(mapping) {
-        // Average old and new values
-        this.outFilter.forEach( (v, k) => {
-          let new_value = (mapping.get(k)+v)/2;
-          mapping.set(k, new_value)
+    private updateOutData(mapping, attribute) {
+      let average = new Map();
+
+      // Set current filter
+      this.outFilterList.set(attribute, mapping);
+
+      // Update average filter
+      mapping.forEach((v, k) => {
+        let temp = 0;
+
+        this.outFilterList.forEach((iv, ik) => {
+          if(iv.size > 0) temp  = temp + iv.get(k);
         })
 
-        // Set highlight colors
-        this.data_lines.forEach(x => {
-          x["highlight"] = mapping.get(x["id"])
-        })
+        temp = temp/this.outFilterList.size;
 
-        this.outFilter = mapping;
-        this.redrawLinecharts();
+        average.set(k, temp)
+      })
+
+      // Set highlight colors
+      this.data_lines.forEach(x => {
+        x["highlight"] = mapping.get(x["id"])
+      })
+
+      this.redrawLinecharts();
     }
 
     private updateInData(mapping) {

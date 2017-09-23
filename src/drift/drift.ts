@@ -14,7 +14,7 @@ export class Drift {
     redraw_parallel;
 
     inFilter = []
-    outFilter = new Map();
+    outFilterList = new Map([["p", new Map()], ["pop", new Map()]]);
 
     // Genetic Model
     simulations = 100;
@@ -94,12 +94,12 @@ export class Drift {
     }
 
     brushing_pChanged() {
-        this.updateOutData(this.brushing_p);
+        this.updateOutData(this.brushing_p, "p");
         this.updateInData(this.brushing_p);
     }
 
     brushing_popChanged() {
-        this.updateOutData(this.brushing_pop);
+        this.updateOutData(this.brushing_pop, "pop");
         this.updateInData(this.brushing_pop);
     }
 
@@ -113,18 +113,30 @@ export class Drift {
         this.redraw_pop = this.redraw_pop == 0 ? 1 : 0;
     }
 
-    private updateOutData(mapping) {
-      // Average old and new values
-      this.outFilter.forEach( (v, k) => {
-        let new_value = (mapping.get(k)+v)/2;
-        mapping.set(k, new_value)
+    private updateOutData(mapping, attribute) {
+      let average = new Map();
+
+      // Set current filter
+      this.outFilterList.set(attribute, mapping);
+
+      // Update average filter
+      mapping.forEach((v, k) => {
+        let temp = 0;
+
+        this.outFilterList.forEach((iv, ik) => {
+          if(iv.size > 0) temp  = temp + iv.get(k);
+        })
+
+        temp = temp/this.outFilterList.size;
+
+        average.set(k, temp)
       })
 
+      // Set line highlight
       this.data_lines.forEach(x => {
-        x["highlight"] = mapping.get(x["id"])
+        x["highlight"] = average.get(x["id"])
       })
 
-      this.outFilter = mapping;
       this.redrawLinecharts();
       }
 
