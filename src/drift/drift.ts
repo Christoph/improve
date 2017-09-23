@@ -14,6 +14,7 @@ export class Drift {
     redraw_parallel;
 
     inFilter = []
+    outFilter = new Map();
 
     // Genetic Model
     simulations = 100;
@@ -113,12 +114,19 @@ export class Drift {
     }
 
     private updateOutData(mapping) {
-        this.data_lines.forEach(x => {
-          x["highlight"] = mapping.get(x["id"])
-        })
+      // Average old and new values
+      this.outFilter.forEach( (v, k) => {
+        let new_value = (mapping.get(k)+v)/2;
+        mapping.set(k, new_value)
+      })
 
-        this.redrawLinecharts();
-    }
+      this.data_lines.forEach(x => {
+        x["highlight"] = mapping.get(x["id"])
+      })
+
+      this.outFilter = mapping;
+      this.redrawLinecharts();
+      }
 
     private updateInData(mapping) {
       if(this.inFilter.length > 0) {
@@ -179,7 +187,7 @@ export class Drift {
 
     compute() {
         this.collapsed_input = true;
-        
+
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)
 

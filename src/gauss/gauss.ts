@@ -18,6 +18,7 @@ export class Gauss {
     redraw_parallel;
 
     inFilter = []
+    outFilter = new Map();
 
     // SIR Model
     TS = 1.0
@@ -182,10 +183,18 @@ export class Gauss {
     }
 
     private updateOutData(mapping) {
+        // Average old and new values
+        this.outFilter.forEach( (v, k) => {
+          let new_value = (mapping.get(k)+v)/2;
+          mapping.set(k, new_value)
+        })
+
+        // Set highlight colors
         this.data_lines.forEach(x => {
           x["highlight"] = mapping.get(x["id"])
         })
 
+        this.outFilter = mapping;
         this.redrawLinecharts();
     }
 
