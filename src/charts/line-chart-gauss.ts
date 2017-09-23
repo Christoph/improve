@@ -23,6 +23,7 @@ export class LineChartGauss {
   private subscription;
 
   // D3 variables
+  private mouse_event;
   private svg;
   private linechart;
   private focus;
@@ -165,23 +166,45 @@ export class LineChartGauss {
         .attr("width", this.focus_width)
         .attr("height", this.focus_height)
         .style("opacity", 0)
-        .on("click", function(d) {
-          let y = d3.mouse(this)[1];
+        .on("mousedown", function(d) {
           let out = new Map();
-
-          self.center = self.y.invert(y);
+          self.center = self.y.invert(d3.mouse(this)[1]);
           self.updateGauss();
 
-          self.data.forEach(d => {
-            out.set(
-              d["id"],
-              self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.sigma))
-            )
+          self.mouse_event = d3.select(this)
+          .on("mousemove", function(d) {
+            let out = new Map();
+            self.center = self.y.invert(d3.mouse(this)[1]);
+            self.updateGauss();
+
+            self.data.forEach(d => {
+              out.set(
+                d["id"],
+                self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.sigma))
+              )
+            })
+
+            self.brushing = out;
+
+            self.updateHighlight();
           })
-
-          self.brushing = out;
-
-          self.updateHighlight();
+          .on("mouseup", function(d) {
+            self.mouse_event.on("mousemove", null).on("mouseup", null);
+          //
+          //   self.center = self.y.invert(d3.mouse(this)[1]);
+          //   self.updateGauss();
+          //
+          //   self.data.forEach(d => {
+          //     out.set(
+          //       d["id"],
+          //       self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.sigma))
+          //     )
+          //   })
+          //
+          //   self.brushing = out;
+          //
+          //   self.updateHighlight();
+          })
         })
         .moveToFront()
 
