@@ -32,6 +32,7 @@ export class LineChartGauss {
   private focus_x;
   private gauss_x;
   private gauss_y;
+  private gauss_sigma;
   private gradientColor;
   private valueline;
   private focusline;
@@ -39,7 +40,6 @@ export class LineChartGauss {
   private brush;
   private center = 1.0;
   private weight = 1.0;
-  private sigma = 0.5;
 
   // set the dimensions and margins of the graph
   private width;
@@ -110,13 +110,11 @@ export class LineChartGauss {
     // let rnd = d3.randomNormal();
     let rnd = d3.randomUniform(-3, 3);
 
-    console.log(this.weight)
-
   // loop to populate data array with
   // probabily - quantile pairs
   for (var i = 0; i < 5000; i++) {
       let q = rnd() // calc random draw from uniform dist
-      let p = this.gaussian(q, this.gauss_y.invert(this.center), this.sigma) // calc prob of rand draw
+      let p = this.gaussian(q, this.gauss_y.invert(this.center), this.gauss_sigma(this.weight)) // calc prob of rand draw
       let el = {
           "y": q,
           "x": p
@@ -139,7 +137,11 @@ export class LineChartGauss {
   	let gaussianConstant = 1 / Math.sqrt(2 * Math.PI);
 
       x = (x - mean) / sigma;
-      return gaussianConstant * Math.exp(-.5 * x * x) / sigma;
+      let g = gaussianConstant * Math.exp(-.5 * x * x) / sigma;
+
+      if(g < 0.001) g = 0;
+
+      return g;
   }
 
   initChart() {
@@ -185,7 +187,7 @@ export class LineChartGauss {
             self.data.forEach(d => {
               out.set(
                 d["id"],
-                self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.sigma))
+                self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.gauss_sigma(self.weight)))
               )
             })
 
@@ -196,9 +198,9 @@ export class LineChartGauss {
           .on("mouseup", function(d) {
             self.mouse_event.on("mousemove", null).on("mouseup", null);
           })
-          .on("mouseleave", function(d) {
-            self.mouse_event.on("mousemove", null).on("mouseup", null);
-          })
+          // .on("mouseleave", function(d) {
+          //   self.mouse_event.on("mousemove", null).on("mouseup", null);
+          // })
         })
         .moveToFront()
 
@@ -214,6 +216,9 @@ export class LineChartGauss {
     this.gauss_x = d3.scaleLinear()
     this.gauss_y = d3.scaleLinear()
       .domain([-3, 3])
+    this.gauss_sigma = d3.scaleLinear()
+      .range([0.1, 5])
+      .domain([2, this.focus_width])
 
     this.gradientColor = d3.scaleLinear()
       .range([0, 1])
