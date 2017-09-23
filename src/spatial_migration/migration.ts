@@ -20,6 +20,13 @@ export class Migration {
     simulations = 100;
     generations = 100;
 
+    // Grid
+    grid_length = 100;
+    grid = [];
+    temp_grid = [];
+    beta = 0.05;
+    gamma = 0.15;
+
     // Population count
     pop_from = 0;
     pop_to = 1000;
@@ -197,8 +204,23 @@ export class Migration {
         }
     }
 
+    get_random_int(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    init_grid() {
+      for(let i = 0; i < this.grid_length; i++) {
+        this.grid.push(new Array(this.grid_length).fill("S"))
+      }
+
+      this.grid[this.get_random_int(0,this.grid_length-1)][this.get_random_int(0,this.grid_length-1)] = "I";
+    }
+
     compute() {
         this.collapsed_input = true;
+
+        // Initialize Grid
+        this.init_grid();
 
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)

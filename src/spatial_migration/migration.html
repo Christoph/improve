@@ -2,6 +2,7 @@
     <require from="./chart.css"></require>
     <require from="../charts/line-chart-gauss"></require>
     <require from="../charts/parallel-coordinates-gauss"></require>
+    <require from="../charts/spatial-grid"></require>
 
     <h2>Compute Genetic Drift</h2>
     <span>Genetic drift is the change in allele frequencies due to random chance events. The simulations are based on a "one locus, two alleles" model, and p denotes the frequency of one of the alleles. <a href="http://www.natureincode.com/code/3/visual_genetic_drift_multiple.html">source</a> </span>
@@ -55,7 +56,7 @@
         </div>
         <div class="col-md-8">
           <div class="row">
-            <div class="col-md-6" style="width:100%; height:300px">
+            <div class="row" style="width:100%; height:300px">
                 <line-chart-gauss
                     brushing.bind="brushing_p"
                     redraw.bind="redraw_p"
@@ -65,7 +66,7 @@
                     y_label="Probability"
                     data.bind="data_lines"></line-char-gauss>
             </div>
-            <div class="col-md-6" style="width:100%; height:300px">
+            <div class="row" style="width:100%; height:300px">
                 <line-chart-gauss
                     brushing.bind="brushing_pop"
                     redraw.bind="redraw_pop"
@@ -75,10 +76,14 @@
                     y_label="Effective Population"
                     data.bind="data_lines"></line-char-gauss>
             </div>
+            <div class="row">
+                <spatial-grid
+                    data.bind="grid">
+                </spatial-grid>
+            </div>
           </div>
         </div>
     </div>
-
 
     <div>
     </div>
