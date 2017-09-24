@@ -4,7 +4,7 @@ import {Genetic} from "../models/genetic"
 import * as d3 from "d3"
 
 @autoinject
-export class SpatialSir {
+export class Epidemics {
     @observable brushing_p;
     @observable brushing_pop;
     redraw_p;

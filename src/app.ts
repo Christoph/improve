@@ -10,7 +10,8 @@ export class App {
           { route: "abb/", moduleId: "abbvie/abb", nav: false, title: "Abb", name: "abb" },
           { route: "det/", moduleId: "details/details", nav: false, title: "Details", name: "det" },
           // { route: "vpsa/", moduleId: "vpsa/vpsa", nav: true, title: "SIR", name: "vpsa" },
-          { route: "gauss/", moduleId: "gauss/gauss", nav: true, title: "SIR", name: "sir" },
+        { route: "sir/", moduleId: "gauss/gauss", nav: true, title: "SIR", name: "sir" },
+        { route: "spatialsir/", moduleId: "spatial_sir/epidemics", nav: true, title: "Spatiel - SIR", name: "sir" },
           { route: "drift/", moduleId: "drift/drift", nav: true, title: "Genetic Drift", name: "drift" },
           { route: "migration/", moduleId: "spatial_migration/migration", nav: true, title: "Spatial Migration", name: "migration" }
       ]);
