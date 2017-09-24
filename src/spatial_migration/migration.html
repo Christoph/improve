@@ -1,85 +1,58 @@
 <template>
     <require from="./chart.css"></require>
-    <require from="../charts/line-chart-gauss"></require>
-    <require from="../charts/parallel-coordinates-gauss"></require>
+    <require from="../charts/line-chart-live"></require>
     <require from="../charts/spatial-grid"></require>
 
-    <h2>Compute Genetic Drift</h2>
-    <span>When individuals mate with genetically similar individuals, inbreeding is the consequence. In this stochastic, individual-based spatial simulation, individuals can only mate with their immediate local neighbors. <a href="http://www.natureincode.com/code/5/spatial_model_inbreeding.html">source</a> </span>
+    <h2>Simulate Allele Heredity</h2>
+    <span>When individuals mate with genetically similar individuals, inbreeding is the consequence. In this stochastic, individual-based spatial simulation, individuals can only mate with their immediate local neighbors. A higher mating distance shows distributions according to the Hardy-Weinberg principle. <a href="http://www.natureincode.com/code/5/spatial_model_inbreeding.html">source</a> </span>
     <hr>
     <div class="row">
-        <div class="col-md-4">
+        <div class="col-md-6">
           <button class="btn btn-default btn-block" click.delegate="switch()">Toggle Parameter Selection</button>
           <div aubs-collapse="collapsed.bind: collapsed_input">
             <div style="margin-left:15px; margin-right:15px">
-                <label>Total Population Size</label>
+                <label>Grid Length</label>
                 <div class="row">
-                    <input type="text" id="pop"/>
+                    <input type="text" id="grid_length"/>
                 </div>
-                <label>Chance of a catastrophic event within a generation</label>
+                <label>Maximum Mating Distance</label>
                 <div class="row">
-                    <input type="text" id="event"/>
-                </div>
-                <label>Number of remaining individuals after event</label>
-                <div class="row">
-                    <input type="text" id="leftover"/>
-                </div>
-
-                <br>
-                <label>Starting Conditions</label>
-                <div class="row">
-                    <div class="col-sm-3">
-                        <label for="#param1">Simulations: </label>
-                        <input style="width: 50px" type="number" value.bind="simulations" id="param1" step="1"><br>
-                    </div>
-                    <div class="col-sm-3">
-                        <label for="#param2">Generations: </label>
-                        <input style="width: 60px" type="number" value.bind="generations" id="param2" step="1"><br>
-                    </div>
+                    <input type="text" id="mating"/>
                 </div>
                 <br>
                 <button class="btn btn-primary btn-block" click.delegate="compute()">
-                    Compute Samples
+                    Start Simulation
                 </button>
             </div>
           </div>
 
-          <div aubs-collapse="collapsed.bind: collapsed_parallel">
-            <div style="width: 100%; height:500px">
-                <parallel-coordinates-gauss
-                brushing.bind="brushing_parallel"
-                redraw.bind="redraw_parallel"
-                data.bind="data_parallel"></parallel-coordinates-gauss>
-            </div>
+          <div aubs-collapse="collapsed.bind: collapsed_grid">
+            <spatial-grid
+                data.bind="data_grid"
+                redraw.bind="redraw">
+            </spatial-grid>
+          </div>
+          <br>
+          <div aubs-collapse="collapsed.bind: collapsed_out">
+            <button class="btn btn-warning btn-block" click.delegate="stopSimulation()">
+                Stop Simulation
+            </button>
           </div>
 
         </div>
-        <div class="col-md-8">
+        <div class="col-md-6">
           <div class="row">
             <div class="row" style="width:100%; height:300px">
-                <line-chart-gauss
+                <line-chart-live
                     brushing.bind="brushing_p"
                     redraw.bind="redraw_p"
                     x_attribute="x"
-                    y_attribute="p"
-                    x_label="Generation"
-                    y_label="Probability"
-                    data.bind="data_lines"></line-char-gauss>
-            </div>
-            <div class="row" style="width:100%; height:300px">
-                <line-chart-gauss
-                    brushing.bind="brushing_pop"
-                    redraw.bind="redraw_pop"
-                    x_attribute="x"
-                    y_attribute="pop"
-                    x_label="Generation"
-                    y_label="Effective Population"
-                    data.bind="data_lines"></line-char-gauss>
+                    y_attribute="F"
+                    x_label="Timestep"
+                    y_label="FScore - Heterozygosity"
+                    data.bind="data_FScore"></line-char-live>
             </div>
             <div class="row">
-                <spatial-grid
-                    data.bind="data_grid">
-                </spatial-grid>
             </div>
           </div>
         </div>

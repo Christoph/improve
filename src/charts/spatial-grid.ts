@@ -45,8 +45,10 @@ export class SpatialGrid {
   // set the dimensions and margins of the graph
   private width;
   private height;
-  private x_size = 440;
-  private y_size = 440;
+  private x_size = 640;
+  private y_size = 640;
+
+  private redrawGridNecessary = false;
 
   constructor(element, private bindingEngine) {
     this.element = element;
@@ -79,12 +81,55 @@ export class SpatialGrid {
     if(this.data.length > 1) {
       // this.draw_grid(["S","#dcdcdc","I","#c82604","R","#5fc40"])
       // this.update_grid(["S","#dcdcdc","I","#c82605","R","#6fc041"]);
+      if(this.redrawGridNecessary) {
+        this.svg.remove()
+        this.draw_grid()
+        this.redrawGridNecessary = false;
+      }
       this.update_grid();
+    }
+  }
+
+  redrawChanged() {
+    if(this.svg) {
+      this.redrawGridNecessary = true;
     }
   }
 
   unbind() {
       this.subscription.dispose();
+  }
+
+  updateGridSize() {
+    let self = this;
+    let grid_length = this.data.length;
+
+    let rw = Math.floor(this.width/grid_length);
+    let rh = Math.floor(this.height/grid_length);
+
+    this.drawing_area.selectAll('g').remove();
+
+    this.drawing_area.selectAll('g')
+            .data(this.data)
+            .enter()
+            .append('g')
+            .attr('transform', function (d, i) {
+              return 'translate(0, ' + (self.width/grid_length) * i + ')';
+            });
+
+    this.drawing_area.selectAll('rect')
+            .data(this.data)
+            .data( (d) => {
+              return d;
+            })
+            .enter()
+            .append('rect')
+            .attr('x', function (d, i) {
+              return (self.width/grid_length) * i;
+            })
+            .attr('width', rw)
+            .attr('height', rh)
+            .attr('class', d => <string>d);
   }
 
   draw_grid() {

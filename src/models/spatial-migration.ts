@@ -10,16 +10,10 @@ export class SpatialMigration {
   params = [];
   time_range = [];
 
-  rnd;
-  sampling;
-
   p = 0.5;
-  max_mating_distance = 1;
   simulation_counter = 0;
 
-  constructor(private mating_distance_range, private grid_length) {
-    this.sampling = new Sampling("sobol");
-    this.rnd = d3.randomUniform();
+  constructor(private max_mating_distance, private grid_length) {
   }
 
   get_random_int(min, max) {
@@ -116,7 +110,35 @@ export class SpatialMigration {
       }
    }
 
-  run_simulation(grid) {
+   compute_FScore(grid) {
+     let A1A1 = 0;
+     let A1A2 = 0;
+     let A2A2 = 0;
+     for (var i = 0; i < this.grid_length; i = i + 1) {
+         for (var ii = 0; ii < this.grid_length; ii = ii + 1) {
+             if (grid[i][ii] == "A1A1") {
+                 A1A1 = A1A1 + 1;
+             }
+             else if (grid[i][ii] == "A1A2") {
+                 A1A2 = A1A2 + 1;
+             }
+             else {
+                 A2A2 = A2A2 + 1;
+             }
+         }
+     }
+
+     let N = A1A1 + A1A2 + A2A2;
+     let h_o = A1A2 / N;
+     let p = ((2 * A1A1) + A1A2) / (2 * N);
+     let h_e = 2 * p * (1-p);
+     let F = (h_e - h_o) / h_e;
+
+
+     return F;
+  }
+
+  run_simulation(grid, data_lines) {
     let temp_grid = [];
 
     for(let i = 0; i < this.grid_length; i++) {
@@ -141,6 +163,6 @@ export class SpatialMigration {
       grid.push(temp)
     }
 
-    this.time_range.push(this.simulation_counter++)
+    data_lines.push({x: this.simulation_counter++, F: this.compute_FScore(grid)})
   }
 }
