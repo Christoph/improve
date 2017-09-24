@@ -11,7 +11,7 @@ export class App {
           { route: "det/", moduleId: "details/details", nav: false, title: "Details", name: "det" },
           // { route: "vpsa/", moduleId: "vpsa/vpsa", nav: true, title: "SIR", name: "vpsa" },
         { route: "sir/", moduleId: "gauss/gauss", nav: true, title: "SIR", name: "sir" },
-        { route: "spatialsir/", moduleId: "spatial_sir/epidemics", nav: true, title: "Spatiel - SIR", name: "sir" },
+        { route: "spatialsir/", moduleId: "spatial_sir/epidemics", nav: true, title: "Spatial - SIR", name: "sir" },
           { route: "drift/", moduleId: "drift/drift", nav: true, title: "Genetic Drift", name: "drift" },
           { route: "migration/", moduleId: "spatial_migration/migration", nav: true, title: "Spatial Migration", name: "migration" }
       ]);
