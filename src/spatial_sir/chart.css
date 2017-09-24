@@ -41,8 +41,12 @@ rect.R {
 .line {
   fill: none;
   stroke: steelblue;
-  stroke-width: 1.5px;
+  stroke-width: 2px;
   shape-rendering: crispEdges;
+}
+
+.line:hover {
+  stroke: black;
 }
 
 .focusline {

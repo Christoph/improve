@@ -11,6 +11,7 @@ export class parallelCoordinatesGauss {
 
     // Two-Way
     @bindable({ defaultBindingMode: bindingMode.twoWay }) brushing;
+    @bindable({ defaultBindingMode: bindingMode.twoWay }) selected;
 
     // Observed Variables
     @bindable data = [];
@@ -175,7 +176,6 @@ export class parallelCoordinatesGauss {
 
         // Add grey background lines for context.
         this.background = this.svg.append("g")
-
             .selectAll("path")
             .data(this.data)
             .enter().append("path")
@@ -188,7 +188,10 @@ export class parallelCoordinatesGauss {
                 if(d["highlight"] == 2) { return true; }
                 else { return false; }
             })
-            .attr("d", (d) => { return this.path(d["data"])});
+            .attr("d", (d) => { return this.path(d["data"])})
+            .on("click", (d) => {
+              this.selected = d["id"]
+            });
 
         // Create local versions of class variables
         // This is necessary due to the nature of TS and D3

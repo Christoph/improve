@@ -14,6 +14,9 @@ export class Epidemics {
     redraw_inf;
 
     @observable brushing_parallel;
+    @observable selected_line;
+    simulation_button_text = "Select a line above!";
+    simulation_button_activated = true;
     redraw_parallel;
 
     timeout;
@@ -125,7 +128,11 @@ export class Epidemics {
     brushing_parallelChanged() {
         this.updateParallelData(this.brushing_parallel);
         this.filterOutData(this.brushing_parallel);
-        // this.redrawLinecharts();
+    }
+
+    selected_lineChanged() {
+      this.simulation_button_text = "Show Simulation: "
+      this.simulation_button_activated = false;
     }
 
     redrawLinecharts() {
@@ -220,9 +227,9 @@ export class Epidemics {
 
     update_Grid(){
       this.data_grid.length = 0;
-      this.data_grid.push(..._.clone(this.spatial.grids[0][this.simulation_counter]))
+      this.data_grid.push(..._.clone(this.spatial.grids[this.selected_line][this.simulation_counter]))
 
-      if(this.simulation_counter < this.spatial.grids[0].length) {
+      if(this.simulation_counter < this.spatial.grids[this.selected_line].length) {
         setTimeout(() => this.update_Grid(), 50);
         this.simulation_counter++;
       }
@@ -232,8 +239,6 @@ export class Epidemics {
     simulate() {
         this.simulation_counter = 0;
         this.update_Grid();
-        // this.data_grid.length = 0;
-        // this.data_grid.push(..._.clone(this.spatial.grids[0][0]))
     }
 
     compute() {
@@ -244,11 +249,6 @@ export class Epidemics {
         // Initialize Spatial Migration Simulation
         this.spatial = new SpatialSir(this.grid_selected, [this.alpha_from, this.alpha_to], [this.beta_from, this.beta_to], [this.gamma_from, this.gamma_to])
         this.spatial.compute_model(this.samples, this.generations)
-
-        // spatial.init_simulation(this.data_grid)
-        // spatial.run_simulation(this.data_grid, [])
-
-        // this.timeout = setInterval( () => {spatial.run_simulation()}, 50)
 
         this.spatial.simulation_data.forEach( (sol, run) => {
           let temp = <any[]> []
