@@ -14,6 +14,8 @@ export class Epidemics {
     @observable brushing_parallel;
     redraw_parallel;
 
+    timeout;
+
     inFilter = []
     outFilterList = new Map([["p", new Map()], ["pop", new Map()]]);
 
@@ -217,7 +219,7 @@ export class Epidemics {
         spatial.init_simulation(this.data_grid)
         // spatial.run_simulation(this.data_grid, [])
 
-        // this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, this.data_FScore)}, 200)
+        this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, [])}, 200)
 
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)
