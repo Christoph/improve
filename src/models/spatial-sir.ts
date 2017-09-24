@@ -12,7 +12,8 @@ export class SpatialSir {
   time_range = [];
 
   p = 0.5;
-  beta = 0.1;
+  beta = 0.05;
+  gamma = 0.15;
   simulation_counter = 0;
 
   constructor(private max_mating_distance, private grid_length) {
@@ -55,10 +56,23 @@ export class SpatialSir {
   expose_neighbours(grid, temp_grid, i, j) {
     for(let n_i = i - 1;n_i <= i + 1; n_i++) {
       for(let n_j = j - 1;n_j <= j + 1; n_j++) {
+        // Take care of possible selft infection
         if(n_i == i && n_j == j) {
           continue;
         }
-        this.infection(grid, temp_grid, this.get_bounded_index(n_i), this.get_bounded_index(n_j));
+        if(Math.random() <= 0.01) {
+          let r_i = this.get_random_int(0, this.grid_length -1);
+          let r_j = this.get_random_int(0, this.grid_length -1);
+
+          // Take care of possible selft infection
+          if(r_i == i && r_j == j) {
+            continue;
+          }
+          this.infection(grid, temp_grid, this.get_bounded_index(r_i), this.get_bounded_index(r_j));
+        }
+        else {
+          this.infection(grid, temp_grid, this.get_bounded_index(n_i), this.get_bounded_index(n_j));
+        }
       }
     }
   }
@@ -67,6 +81,14 @@ export class SpatialSir {
     if(grid[i][j] == "S") {
       if(Math.random() < this.beta) {
         temp_grid[i][j] = "I";
+      }
+    }
+  }
+
+  recovery(grid,temp_grid,i, j) {
+    if(grid[i][j] == "I") {
+      if(Math.random() < this.gamma) {
+        temp_grid[i][j] = "R";
       }
     }
   }
@@ -81,6 +103,7 @@ export class SpatialSir {
         // Infect surrounding hosts
         if(grid[i][j] == "I") {
           this.expose_neighbours(grid,temp_grid,i, j);
+          this.recovery(grid,temp_grid,i, j);
         }
       }
     }

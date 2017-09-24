@@ -25,10 +25,6 @@ export class Epidemics {
 
     // Grid
     grid_selected = 100;
-    grid = [];
-    temp_grid = [];
-    beta = 0.05;
-    gamma = 0.15;
 
     // Population count
     pop_from = 0;
@@ -219,7 +215,7 @@ export class Epidemics {
         spatial.init_simulation(this.data_grid)
         // spatial.run_simulation(this.data_grid, [])
 
-        this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, [])}, 200)
+        this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, [])}, 50)
 
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)
