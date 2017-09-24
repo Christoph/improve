@@ -25,7 +25,7 @@ export class SpatialGrid {
   // D3 variables
   private mouse_event;
   private svg;
-  private linechart;
+  private drawing_area;
   private focus;
   private x;
   private y;
@@ -72,9 +72,13 @@ export class SpatialGrid {
 
   // Update the chart if the data changes
   dataMutated(splices) {
+    if(!this.svg) {
+      this.draw_grid()
+    }
       if(this.data.length > 1) {
-        this.draw_grid(["S","#dcdcdc","I","#c82605","R","#6fc041"])
-          this.update_grid(["S","#dcdcdc","I","#c82605","R","#6fc041"]);
+        // this.draw_grid(["S","#dcdcdc","I","#c82604","R","#5fc40"])
+        // this.update_grid(["S","#dcdcdc","I","#c82605","R","#6fc041"]);
+        this.update_grid();
       }
   }
 
@@ -82,11 +86,11 @@ export class SpatialGrid {
       this.subscription.dispose();
   }
 
-  draw_grid(colors) {
+  draw_grid() {
     let self = this;
     let grid_length = this.data.length;
 
-    let svg = d3.select(this.element)
+    this.svg = d3.select(this.element)
           .append('svg')
           .attr('width', this.width)
           .attr('height', this.height)
@@ -96,7 +100,7 @@ export class SpatialGrid {
     let rw = Math.floor(this.width/grid_length);
     let rh = Math.floor(this.height/grid_length);
 
-    let g = svg.selectAll('g')
+    this.drawing_area = this.svg.selectAll('g')
             .data(this.data)
             .enter()
             .append('g')
@@ -104,7 +108,8 @@ export class SpatialGrid {
               return 'translate(0, ' + (self.width/grid_length) * i + ')';
             });
 
-    g.selectAll('rect')
+    this.drawing_area.selectAll('rect')
+            .data(this.data)
             .data( (d) => {
               return d;
             })
@@ -116,39 +121,16 @@ export class SpatialGrid {
             .attr('width', rw)
             .attr('height', rh)
             .attr('class', d => <string>d);
-
-        if (!colors) {
-        	d3.selectAll(".A1A1").style("fill","#fff");
-          d3.selectAll(".A1A2").style("fill","#2176c9");
-          d3.selectAll(".A2A2").style("fill","#042029");
-        }
-        else {
-            for (var i = 0; i < colors.length; i = i + 2) {
-                d3.selectAll("."+colors[i]).style("fill",colors[i+1]);
-            }
-        }
     }
 
-    update_grid(colors){
-        var grid_length = this.data.length;
-        d3.select('svg').selectAll('g')
+    update_grid(){
+        this.svg.selectAll('g')
             .data(this.data)
             .selectAll('rect')
             .data(function (d) {
               return d;
             })
-            .attr('class', d => <string>d);
-
-        if (!colors) {
-        	d3.selectAll(".A1A1").style("fill","#fff");
-          d3.selectAll(".A1A2").style("fill","#2176c9");
-          d3.selectAll(".A2A2").style("fill","#042029");
-        }
-        else {
-            for (var i = 0; i < colors.length; i = i + 2) {
-                d3.selectAll("."+colors[i]).style("fill",colors[i+1]);
-            }
-        }
+            .attr('class', d => <string>d)
     }
 
 }

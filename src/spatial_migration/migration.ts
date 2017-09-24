@@ -23,9 +23,9 @@ export class Migration {
     // Grid
     grid_length = 100;
     grid = [];
-    temp_grid = [];
-    beta = 0.05;
-    gamma = 0.15;
+    p = 0.5;
+    max_mating_distance = 1;
+    generation_counter = 0;
 
     // Population count
     pop_from = 0;
@@ -210,17 +210,130 @@ export class Migration {
 
     init_grid() {
       for(let i = 0; i < this.grid_length; i++) {
-        this.grid.push(new Array(this.grid_length).fill("S"))
+        let temp = []
+
+        for (var j = 0; j < this.grid_length; j++) {
+          let random_number = Math.random();
+
+          if (random_number < this.p*this.p) {
+              temp[j] = "A1A1";
+          }
+          else if (random_number > 1 - (1-this.p) * (1-this.p)) {
+              temp[j] = "A2A2";
+          }
+          else {
+              temp[j] = "A1A2";
+          }
+        }
+
+        this.grid.push(temp)
+      }
+    }
+
+    get_bounded_index(index) {
+      let bounded_index = index;
+
+      if(index < 0) {
+        bounded_index = index + this.grid_length;
+      }
+      if(index >= this.grid_length) {
+        bounded_index = index - this.grid_length;
       }
 
-      this.grid[this.get_random_int(0,this.grid_length-1)][this.get_random_int(0,this.grid_length-1)] = "I";
+      return bounded_index
+    }
+
+    pick_mating_partner(i, j) {
+      let mating_i = this.get_random_int(i - this.max_mating_distance, i + this.max_mating_distance);
+      let mating_j = this.get_random_int(j - this.max_mating_distance, j + this.max_mating_distance);
+
+      mating_i = this.get_bounded_index(mating_i);
+      mating_j = this.get_bounded_index(mating_j);
+
+      return this.grid[mating_i][mating_j]
+    }
+
+    get_offspring(parent1, parent2) {
+        var p1 = parent1;
+        var p2 = parent2;
+        if (p1 == "A1A1" && p2 == "A1A1") {
+            return "A1A1";
+        }
+        else if ((p1 == "A1A1" && p2 == "A1A2") || (p1 == "A1A2" && p2 == "A1A1")) {
+            if (Math.random() < 0.5) {
+                return "A1A1";
+            }
+            else {
+                return "A1A2";
+            }
+        }
+        else if ((p1 == "A1A1" && p2 == "A2A2") || (p1 == "A2A2" && p2 == "A1A1")) {
+            return "A1A2";
+        }
+        else if (p1 == "A1A2" && p2 == "A1A2") {
+            var random_number = Math.random();
+            if (random_number < 0.25) {
+                return "A1A1";
+            }
+            else if (random_number > 0.75){
+                return "A2A2";
+            }
+            else {
+                return "A1A2";
+            }
+        }
+        else if ((p1 == "A1A2" && p2 == "A2A2") || (p1 == "A2A2" && p2 == "A1A2")) {
+            if (Math.random() < 0.5) {
+                return "A1A2";
+            }
+            else {
+                return "A2A2";
+            }
+        }
+        else if (p1 == "A2A2" && p2 == "A2A2") {
+            return "A2A2";
+        }
+     }
+
+    run_generation = () => {
+      let temp_grid = [];
+
+      for(let i = 0; i < this.grid_length; i++) {
+        temp_grid[i] = [];
+
+        for(let j = 0; j < this.grid_length; j++) {
+          // Select mating partner
+          let mating_partner = this.pick_mating_partner(i, j);
+
+          // Return offspring genotype
+          temp_grid[i][j] = this.get_offspring(this.grid[i][j], mating_partner);
+        }
+      }
+
+      this.grid.length = 0;
+
+      for(let i = 0; i < this.grid_length; i++) {
+        let temp = []
+        for(let j = 0; j < this.grid_length; j++) {
+          temp[j] = temp_grid[i][j]
+        }
+        this.grid.push(temp)
+      }
+
+      this.generation_counter++;
     }
 
     compute() {
         this.collapsed_input = true;
 
         // Initialize Grid
-        this.init_grid();
+        this.init_grid()
+        setInterval(this.run_generation, 100);
+        // console.log(this.grid)
+        // for(let i = 0; i < 100; i++) {
+        //   this.run_generation();
+        // }
+        // console.log(this.grid)
 
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)

@@ -22,6 +22,18 @@
   shape-rendering: crispEdges;
 }
 
+rect.A1A1 {
+  fill: #fff;
+}
+
+rect.A1A2{
+  fill: #2176c9;
+}
+
+rect.A2A2 {
+  fill: #042029;
+}
+
 .axis text {
   text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff;
 }
