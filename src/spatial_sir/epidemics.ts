@@ -1,6 +1,7 @@
 import {autoinject, observable} from 'aurelia-framework';
 import "ion-rangeslider"
 import {Genetic} from "../models/genetic"
+import {SpatialSir} from "../models/spatial-sir"
 import * as d3 from "d3"
 
 @autoinject
@@ -21,7 +22,7 @@ export class Epidemics {
     generations = 100;
 
     // Grid
-    grid_length = 100;
+    grid_selected = 100;
     grid = [];
     temp_grid = [];
     beta = 0.05;
@@ -42,6 +43,7 @@ export class Epidemics {
     // Sobol sampling
     sobol_n = 100
 
+    data_grid = <any[]> []
     data_parallel = <any[]> []
     data_lines = <any[]> []
     data_lines_original = <any[]> []
@@ -204,23 +206,18 @@ export class Epidemics {
         }
     }
 
-    get_random_int(min, max) {
-      return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
-
-    init_grid() {
-      for(let i = 0; i < this.grid_length; i++) {
-        this.grid.push(new Array(this.grid_length).fill("S"))
-      }
-
-      this.grid[this.get_random_int(0,this.grid_length-1)][this.get_random_int(0,this.grid_length-1)] = "I";
-    }
-
     compute() {
         this.collapsed_input = true;
+        // this.collapsed_out = false;
+        // this.collapsed_grid = false;
 
-        // Initialize Grid
-        this.init_grid();
+        // Initialize Spatial Migration Simulation
+        let spatial = new SpatialSir(1, this.grid_selected)
+
+        spatial.init_simulation(this.data_grid)
+        // spatial.run_simulation(this.data_grid, [])
+
+        // this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, this.data_FScore)}, 200)
 
         // Create model params
         let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)

@@ -4,8 +4,8 @@
     <require from="../charts/parallel-coordinates-gauss"></require>
     <require from="../charts/spatial-grid"></require>
 
-    <h2>Compute Genetic Drift</h2>
-    <span>Genetic drift is the change in allele frequencies due to random chance events. The simulations are based on a "one locus, two alleles" model, and p denotes the frequency of one of the alleles. <a href="http://www.natureincode.com/code/3/visual_genetic_drift_multiple.html">source</a> </span>
+    <h2>Compute Epidemics using SIR model</h2>
+    <span>This is a spatial simulation of an epidemic using the SIR (susceptible, infected, recovered) model.. <a href="http://www.natureincode.com/code/7/sir_small_world.html">source</a> </span>
     <hr>
     <div class="row">
         <div class="col-md-4">
@@ -51,6 +51,9 @@
                 redraw.bind="redraw_parallel"
                 data.bind="data_parallel"></parallel-coordinates-gauss>
             </div>
+            <spatial-grid
+                data.bind="data_grid">
+            </spatial-grid>
           </div>
 
         </div>
@@ -75,11 +78,6 @@
                     x_label="Generation"
                     y_label="Effective Population"
                     data.bind="data_lines"></line-char-gauss>
-            </div>
-            <div class="row">
-                <spatial-grid
-                    data.bind="grid">
-                </spatial-grid>
             </div>
           </div>
         </div>

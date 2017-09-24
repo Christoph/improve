@@ -15,6 +15,18 @@
   shape-rendering: crispEdges;
 }
 
+rect.S {
+  fill: #dcdcdc;
+}
+
+rect.I {
+  fill: #c82605;
+}
+
+rect.R {
+  fill: #6fc041;
+}
+
 .axis line,
 .axis path {
   fill: none;
