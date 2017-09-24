@@ -9,14 +9,46 @@ declare var lobos: any;
 @autoinject
 export class SpatialSir {
   params = [];
-  time_range = [];
+  grids = [];
+  simulation_data = [];
+  sampling;
 
-  p = 0.5;
-  beta = 0.05;
-  gamma = 0.15;
-  simulation_counter = 0;
+  constructor(private grid_length, private alpha_range, private beta_range, private gamma_range) {
+    this.sampling = new Sampling("sobol");
+  }
 
-  constructor(private max_mating_distance, private grid_length) {
+  compute_model(n_samples, generations) {
+    this.simulation_data.length = 0;
+    this.grids.length = 0;
+
+    this.get_params(this.sampling.get_points(n_samples, 3))
+
+    this.params.forEach( d => {
+        let grid = <any[]> [];
+
+        this.init_simulation(grid)
+        this.run_simulation(grid, d, generations)
+      })
+  }
+
+  private get_params(points) {
+    let alpha_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.alpha_range);
+    let beta_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.beta_range);
+    let gamma_scale = d3.scaleLinear()
+      .domain([0, 1])
+      .range(this.gamma_range);
+
+    points.forEach( d => {
+        this.params.push([
+          alpha_scale(d[0]),
+          beta_scale(d[1]),
+          gamma_scale(d[2])
+        ])
+    })
   }
 
   get_random_int(min, max) {
@@ -24,9 +56,7 @@ export class SpatialSir {
   }
 
   init_simulation(grid) {
-    grid.length = 0;
-    this.simulation_counter = 0;
-
+    // Fill Grid with initial data
     for(let i = 0; i < this.grid_length; i++) {
       let temp = []
 
@@ -53,14 +83,16 @@ export class SpatialSir {
     return bounded_index
   }
 
-  expose_neighbours(grid, temp_grid, i, j) {
+  expose_neighbours(grid, temp_grid, i, j, params) {
     for(let n_i = i - 1;n_i <= i + 1; n_i++) {
       for(let n_j = j - 1;n_j <= j + 1; n_j++) {
         // Take care of possible selft infection
         if(n_i == i && n_j == j) {
           continue;
         }
-        if(Math.random() <= 0.01) {
+
+        // Chance of an long distance interaction
+        if(Math.random() <= params[0]) {
           let r_i = this.get_random_int(0, this.grid_length -1);
           let r_j = this.get_random_int(0, this.grid_length -1);
 
@@ -68,32 +100,47 @@ export class SpatialSir {
           if(r_i == i && r_j == j) {
             continue;
           }
-          this.infection(grid, temp_grid, this.get_bounded_index(r_i), this.get_bounded_index(r_j));
+          this.infection(grid, temp_grid, this.get_bounded_index(r_i), this.get_bounded_index(r_j), params);
         }
         else {
-          this.infection(grid, temp_grid, this.get_bounded_index(n_i), this.get_bounded_index(n_j));
+          this.infection(grid, temp_grid, this.get_bounded_index(n_i), this.get_bounded_index(n_j), params);
         }
       }
     }
   }
 
-  infection(grid, temp_grid, i, j) {
+  infection(grid, temp_grid, i, j, params) {
     if(grid[i][j] == "S") {
-      if(Math.random() < this.beta) {
+      if(Math.random() < params[1]) {
         temp_grid[i][j] = "I";
       }
     }
   }
 
-  recovery(grid,temp_grid,i, j) {
+  recovery(grid, temp_grid,i, j, params) {
     if(grid[i][j] == "I") {
-      if(Math.random() < this.gamma) {
+      if(Math.random() < params[2]) {
         temp_grid[i][j] = "R";
       }
     }
   }
 
-  run_simulation(grid, data_lines) {
+  run_simulation(grid, params, generations) {
+    let simulation = [];
+    let steps = []
+
+    steps.push(_.cloneDeep(grid))
+
+    for(let i = 0; i < generations - 1; i++) {
+      simulation.push(this.run_iteration(grid, params))
+      steps.push(_.cloneDeep(grid))
+    }
+
+    this.grids.push(steps)
+    this.simulation_data.push(simulation)
+  }
+
+  run_iteration(grid, params) {
     // Duplicate to temp_grid
     let temp_grid = _.cloneDeep(grid);
 
@@ -102,8 +149,8 @@ export class SpatialSir {
       for(let j = 0; j < this.grid_length; j++) {
         // Infect surrounding hosts
         if(grid[i][j] == "I") {
-          this.expose_neighbours(grid,temp_grid,i, j);
-          this.recovery(grid,temp_grid,i, j);
+          this.expose_neighbours(grid, temp_grid,i, j, params);
+          this.recovery(grid, temp_grid,i, j, params);
         }
       }
     }
@@ -118,6 +165,10 @@ export class SpatialSir {
       grid.push(temp)
     }
 
-    // data_lines.push({x: this.simulation_counter++, F: this.compute_FScore(grid)})
+    let rec = _.filter(_.flatten(grid), function(o) { if (o == "R") return o }).length;
+    let inf = _.filter(_.flatten(grid), function(o) { if (o == "I") return o }).length;
+    let sus = _.filter(_.flatten(grid), function(o) { if (o == "S") return o }).length;
+
+    return {rec: rec, inf: inf, sus: sus}
   }
 }

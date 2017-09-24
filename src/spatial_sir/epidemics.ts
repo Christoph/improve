@@ -6,10 +6,12 @@ import * as d3 from "d3"
 
 @autoinject
 export class Epidemics {
-    @observable brushing_p;
-    @observable brushing_pop;
-    redraw_p;
-    redraw_pop;
+    @observable brushing_sus;
+    @observable brushing_inf;
+    @observable brushing_rec;
+    redraw_sus;
+    redraw_rec;
+    redraw_inf;
 
     @observable brushing_parallel;
     redraw_parallel;
@@ -17,31 +19,30 @@ export class Epidemics {
     timeout;
 
     inFilter = []
-    outFilterList = new Map([["p", new Map()], ["pop", new Map()]]);
-
-    // Genetic Model
-    simulations = 100;
-    generations = 100;
+    outFilterList = new Map([
+      ["sus", new Map()],
+      ["inf", new Map()],
+      ["rec", new Map()]
+    ]);
 
     // Grid
     grid_selected = 100;
+    generations = 40;
+    samples = 100;
 
-    // Population count
-    pop_from = 0;
-    pop_to = 1000;
+    // Alpha
+    alpha_from = 0.05;
+    alpha_to = 0.1;
 
-    // Probability of event
-    event_from = 0.1;
-    event_to = 0.2;
+    // Beta
+    beta_from = 0.1;
+    beta_to = 0.2;
 
-    // Leftover individuals after event
-    leftover_from = 1;
-    leftover_to = 10;
+    // Gamma
+    gamma_from = 0.05;
+    gamma_to = 0.1;
 
-    // Sobol sampling
-    sobol_n = 100
-
-    data_grid = <any[]> []
+    // Data
     data_parallel = <any[]> []
     data_lines = <any[]> []
     data_lines_original = <any[]> []
@@ -59,21 +60,21 @@ export class Epidemics {
 
     attached() {
         // Attaching range sliders
-        $("#pop").ionRangeSlider({
-            min: 1,
-            max: 2000,
-            from: 500,
-            to: 1000,
-            step: 1,
+        $("#alpha").ionRangeSlider({
+            min: 0,
+            max: 0.2,
+            from: 0.05,
+            to: 0.1,
+            step: 0.001,
             type: "double",
             grid: true,
             grid_num: 10,
             onFinish: (data) => {
-            this.pop_from = data["from"]
-            this.pop_to = data["to"]
+            this.alpha_from = data["from"]
+            this.alpha_to = data["to"]
         }});
-        $("#event").ionRangeSlider({
-            min: 0.01,
+        $("#beta").ionRangeSlider({
+            min: 0,
             max: 1,
             from: 0.1,
             to: 0.2,
@@ -82,42 +83,49 @@ export class Epidemics {
             grid: true,
             grid_num: 10,
             onFinish: (data) => {
-            this.event_from = data["from"]
-            this.event_to = data["to"]
+            this.beta_from = data["from"]
+            this.beta_to = data["to"]
         }});
-        $("#leftover").ionRangeSlider({
-            min: 1,
-            max: 50,
-            from: 1,
-            to: 10,
-            step: 1,
+        $("#gamma").ionRangeSlider({
+            min: 0,
+            max: 1,
+            from: 0.05,
+            to: 0.1,
+            step: 0.01,
             type: "double",
             grid: true,
             grid_num: 10,
             onFinish: (data) => {
-            this.leftover_from = data["from"]
-            this.leftover_to = data["to"]
+            this.gamma_from = data["from"]
+            this.gamma_to = data["to"]
         }});
     }
 
-    brushing_pChanged() {
-        this.updateOutData(this.brushing_p, "p");
-        this.updateInData(this.brushing_p);
+    brushing_susChanged() {
+        this.updateOutData(this.brushing_sus, "sus");
+        this.updateInData(this.brushing_sus);
     }
 
-    brushing_popChanged() {
-        this.updateOutData(this.brushing_pop, "pop");
-        this.updateInData(this.brushing_pop);
+    brushing_recChanged() {
+        this.updateOutData(this.brushing_rec, "rec");
+        this.updateInData(this.brushing_rec);
+    }
+
+    brushing_infChanged() {
+        this.updateOutData(this.brushing_inf, "inf");
+        this.updateInData(this.brushing_inf);
     }
 
     brushing_parallelChanged() {
         this.updateParallelData(this.brushing_parallel);
         this.filterOutData(this.brushing_parallel);
+        // this.redrawLinecharts();
     }
 
     redrawLinecharts() {
-        this.redraw_p = this.redraw_p == 0 ? 1 : 0;
-        this.redraw_pop = this.redraw_pop == 0 ? 1 : 0;
+        this.redraw_inf = this.redraw_inf == 0 ? 1 : 0;
+        this.redraw_rec = this.redraw_rec == 0 ? 1 : 0;
+        this.redraw_sus = this.redraw_sus == 0 ? 1 : 0;
     }
 
     private updateOutData(mapping, attribute) {
@@ -210,42 +218,39 @@ export class Epidemics {
         // this.collapsed_grid = false;
 
         // Initialize Spatial Migration Simulation
-        let spatial = new SpatialSir(1, this.grid_selected)
+        let spatial = new SpatialSir(this.grid_selected, [this.alpha_from, this.alpha_to], [this.beta_from, this.beta_to], [this.gamma_from, this.gamma_to])
+        spatial.compute_model(this.samples, this.generations)
 
-        spatial.init_simulation(this.data_grid)
+        // spatial.init_simulation(this.data_grid)
         // spatial.run_simulation(this.data_grid, [])
 
-        this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, [])}, 50)
+        // this.timeout = setInterval( () => {spatial.run_simulation()}, 50)
 
-        // Create model params
-        let gen = new Genetic([this.event_from, this.event_to],[this.pop_from, this.pop_to], [this.leftover_from, this.leftover_to], this.generations, this.simulations)
-
-        let model = gen.compute_model()
-
-        model.forEach( (sol, run) => {
+        spatial.simulation_data.forEach( (sol, run) => {
           let temp = <any[]> []
           for (let i = 0; i < sol.length; i++) {
               temp.push({
-                  "x": gen.time_range[i],
-                  "p": sol[i].p,
-                  "pop": sol[i].pop
+                  x: i,
+                  rec: sol[i].rec,
+                  inf: sol[i].inf,
+                  sus: sol[i].sus
               })
           }
 
           this.data_parallel.push({
-                  "id": run,
-                  "highlight": 0,
-                  "data": {
-                      "pop": gen.params[run][0],
-                      "P(event)": gen.params[run][1],
-                      "Remaining": gen.params[run][2]
+                  id: run,
+                  highlight: 0,
+                  data: {
+                      alpha: spatial.params[run][0],
+                      beta: spatial.params[run][1],
+                      gamma: spatial.params[run][2]
                   }
           })
 
           this.data_lines_original.push({
-                  "id": run,
-                  "highlight": 0,
-                  "data": temp
+                  id: run,
+                  highlight: 0,
+                  data: temp
           })
         })
 

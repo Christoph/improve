@@ -12,25 +12,31 @@
           <button class="btn btn-default btn-block" click.delegate="switch()">Toggle Parameter Selection</button>
           <div aubs-collapse="collapsed.bind: collapsed_input">
             <div style="margin-left:15px; margin-right:15px">
-                <label>Total Population Size</label>
-                <div class="row">
-                    <input type="text" id="pop"/>
-                </div>
-                <label>Chance of a catastrophic event within a generation</label>
-                <div class="row">
-                    <input type="text" id="event"/>
-                </div>
-                <label>Number of remaining individuals after event</label>
-                <div class="row">
-                    <input type="text" id="leftover"/>
-                </div>
+              <label>Alpha: Chance of long distance contact.</label>
+              <div class="row">
+                      <input type="text" id="alpha"/>
+              </div>
+
+              <label>Beta: Transmission rate: Infected -> Susceptible.</label>
+              <div class="row">
+                      <input type="text" id="beta"/>
+              </div>
+
+              <label>Gamma: Recovery rate.</label>
+              <div class="row">
+                  <input type="text" id="gamma"/>
+              </div>
 
                 <br>
                 <label>Starting Conditions</label>
                 <div class="row">
                     <div class="col-sm-3">
-                        <label for="#param1">Simulations: </label>
-                        <input style="width: 50px" type="number" value.bind="simulations" id="param1" step="1"><br>
+                        <label for="#param3">Grid Size: </label>
+                        <input style="width: 50px" type="number" value.bind="grid_selected" id="param3" step="1"><br>
+                    </div>
+                    <div class="col-sm-3">
+                        <label for="#param1">Samples: </label>
+                        <input style="width: 50px" type="number" value.bind="samples" id="param1" step="1"><br>
                     </div>
                     <div class="col-sm-3">
                         <label for="#param2">Generations: </label>
@@ -60,24 +66,37 @@
         <div class="col-md-8">
           <div class="row">
             <div class="row" style="width:100%; height:300px">
-                <line-chart-gauss
-                    brushing.bind="brushing_p"
-                    redraw.bind="redraw_p"
-                    x_attribute="x"
-                    y_attribute="p"
-                    x_label="Generation"
-                    y_label="Probability"
-                    data.bind="data_lines"></line-char-gauss>
-            </div>
-            <div class="row" style="width:100%; height:300px">
-                <line-chart-gauss
-                    brushing.bind="brushing_pop"
-                    redraw.bind="redraw_pop"
-                    x_attribute="x"
-                    y_attribute="pop"
-                    x_label="Generation"
-                    y_label="Effective Population"
-                    data.bind="data_lines"></line-char-gauss>
+              <line-chart-gauss
+                  brushing.bind="brushing_rec"
+                  redraw.bind="redraw_rec"
+                  x_attribute="x"
+                  y_attribute="rec"
+                  x_label="Generation"
+                  y_label="Recovered"
+                  data.bind="data_lines"></line-char-gauss>
+          </div>
+          <div class="row"style="width:100%; height:300px">
+              <line-chart-gauss
+                  brushing.bind="brushing_sus"
+                  redraw.bind="redraw_sus"
+                  mo.bind="test"
+                  x_attribute="x"
+                  y_attribute="sus"
+                  x_label="Generation"
+                  y_label="Susceptibility"
+                  data.bind="data_lines"></line-chart-gauss>
+                          </div>
+          <div class="row"style="width:100%; height:300px">
+              <line-chart-gauss
+                  brushing.bind="brushing_sus"
+                  redraw.bind="redraw_sus"
+                  mo.bind="test"
+                  x_attribute="x"
+                  y_attribute="inf"
+                  x_label="Generation"
+                  y_label="Infected"
+                  data.bind="data_lines"></line-chart-gauss>
+                          </div>
             </div>
           </div>
         </div>
