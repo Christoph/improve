@@ -21,6 +21,7 @@ export class SpatialGrid {
   // Aurelia variables
   private element;
   private subscription;
+  private second_subscription;
 
   // D3 variables
   private mouse_event;
@@ -75,11 +76,11 @@ export class SpatialGrid {
     if(!this.svg) {
       this.draw_grid()
     }
-      if(this.data.length > 1) {
-        // this.draw_grid(["S","#dcdcdc","I","#c82604","R","#5fc40"])
-        // this.update_grid(["S","#dcdcdc","I","#c82605","R","#6fc041"]);
-        this.update_grid();
-      }
+    if(this.data.length > 1) {
+      // this.draw_grid(["S","#dcdcdc","I","#c82604","R","#5fc40"])
+      // this.update_grid(["S","#dcdcdc","I","#c82605","R","#6fc041"]);
+      this.update_grid();
+    }
   }
 
   unbind() {
