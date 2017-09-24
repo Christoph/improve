@@ -177,6 +177,17 @@ export class LineChartGauss {
           self.weight = self.focus_x.invert(d3.mouse(this)[0]);
           self.updateGauss();
 
+          self.data.forEach(d => {
+            out.set(
+              d["id"],
+              self.gradientColor(self.gaussian(self.gauss_y.invert(d.data[d.data.length-1][self.y_attribute]), self.gauss_y.invert(self.center), self.gauss_sigma(self.weight)))
+            )
+          })
+
+          self.brushing = out;
+
+          self.updateHighlight();
+
           self.mouse_event = d3.select(this)
           .on("mousemove", function(d) {
             let out = new Map();
@@ -298,6 +309,11 @@ export class LineChartGauss {
       this.linechart.selectAll("path.line")
           .attr("opacity", function(d) {
             return d["highlight"]
+          })
+
+      this.focus.selectAll("rect.bar")
+          .attr("opacity", function(d) {
+            return self.gradientColor(self.gaussian(self.gauss_y.invert(d.x0 + ((d.x1-d.x0)/2)), self.gauss_y.invert(self.center), self.gauss_sigma(self.weight)))
           })
   }
 

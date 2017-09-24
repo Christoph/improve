@@ -72,4 +72,9 @@ rect.A2A2 {
   opacity: 0.1;
 }
 
-rect.bar { fill: steelblue; }
+rect.bar {
+  fill: steelblue;
+  outline-width: thin;
+  outline-style: solid;
+  outline-color: #c7c7c7;
+}
