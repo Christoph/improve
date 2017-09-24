@@ -33,6 +33,7 @@ export class LineChartGauss {
   private gauss_x;
   private gauss_y;
   private gauss_sigma;
+  private gauss_max_sigma;
   private gradientColor;
   private valueline;
   private focusline;
@@ -228,8 +229,11 @@ export class LineChartGauss {
     this.gauss_y = d3.scaleLinear()
       .domain([-3, 3])
     this.gauss_sigma = d3.scaleLinear()
-      .range([0.1, 5])
+      .range([0.1, 25])
       .domain([2, this.focus_width])
+    this.gauss_max_sigma= d3.scaleLinear()
+      .range([50, 1])
+      .domain([1, 100])
 
     this.gradientColor = d3.scaleLinear()
       .range([0, 1])
@@ -361,6 +365,11 @@ export class LineChartGauss {
         (focus_data);
 
     this.focus_x.domain([0, d3.max(bins, (d: any[]) => d.length)]);
+
+    if(this.focus_x.domain()[1] > 100) {
+      this.gauss_max_sigma.domain([1, this.focus_x.domain()[1]])
+    }
+    this.gauss_sigma.range([0.1, this.gauss_max_sigma(this.focus_x.domain()[1])])
 
 
     // Select chart
