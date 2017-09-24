@@ -1,8 +1,8 @@
 import {autoinject, observable} from 'aurelia-framework';
 import "ion-rangeslider"
-import {Genetic} from "../models/genetic"
 import {SpatialSir} from "../models/spatial-sir"
 import * as d3 from "d3"
+import * as _ from "lodash"
 
 @autoinject
 export class Epidemics {
@@ -43,6 +43,7 @@ export class Epidemics {
     gamma_to = 0.1;
 
     // Data
+    data_grid = <any[]> []
     data_parallel = <any[]> []
     data_lines = <any[]> []
     data_lines_original = <any[]> []
@@ -52,9 +53,14 @@ export class Epidemics {
 
     collapsed_input = false;
     collapsed_parallel = false;
+    collapsed_grid = false;
+
+    spatial;
+    simulation_counter;
 
     switch() {
       this.collapsed_input = this.collapsed_input == true ? false : true;
+      this.collapsed_grid = this.collapsed_grid == true ? false : true;
       this.collapsed_parallel = this.collapsed_parallel == true ? false : true;
     }
 
@@ -212,21 +218,39 @@ export class Epidemics {
         }
     }
 
+    update_Grid(){
+      this.data_grid.length = 0;
+      this.data_grid.push(..._.clone(this.spatial.grids[0][this.simulation_counter]))
+
+      if(this.simulation_counter < this.spatial.grids[0].length) {
+        setTimeout(() => this.update_Grid(), 50);
+        this.simulation_counter++;
+      }
+    }
+
+
+    simulate() {
+        this.simulation_counter = 0;
+        this.update_Grid();
+        // this.data_grid.length = 0;
+        // this.data_grid.push(..._.clone(this.spatial.grids[0][0]))
+    }
+
     compute() {
+        this.collapsed_parallel = false;
         this.collapsed_input = true;
-        // this.collapsed_out = false;
-        // this.collapsed_grid = false;
+        this.collapsed_grid = false;
 
         // Initialize Spatial Migration Simulation
-        let spatial = new SpatialSir(this.grid_selected, [this.alpha_from, this.alpha_to], [this.beta_from, this.beta_to], [this.gamma_from, this.gamma_to])
-        spatial.compute_model(this.samples, this.generations)
+        this.spatial = new SpatialSir(this.grid_selected, [this.alpha_from, this.alpha_to], [this.beta_from, this.beta_to], [this.gamma_from, this.gamma_to])
+        this.spatial.compute_model(this.samples, this.generations)
 
         // spatial.init_simulation(this.data_grid)
         // spatial.run_simulation(this.data_grid, [])
 
         // this.timeout = setInterval( () => {spatial.run_simulation()}, 50)
 
-        spatial.simulation_data.forEach( (sol, run) => {
+        this.spatial.simulation_data.forEach( (sol, run) => {
           let temp = <any[]> []
           for (let i = 0; i < sol.length; i++) {
               temp.push({
@@ -241,9 +265,9 @@ export class Epidemics {
                   id: run,
                   highlight: 0,
                   data: {
-                      alpha: spatial.params[run][0],
-                      beta: spatial.params[run][1],
-                      gamma: spatial.params[run][2]
+                      alpha: this.spatial.params[run][0],
+                      beta: this.spatial.params[run][1],
+                      gamma: this.spatial.params[run][2]
                   }
           })
 

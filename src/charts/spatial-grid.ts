@@ -45,8 +45,8 @@ export class SpatialGrid {
   // set the dimensions and margins of the graph
   private width;
   private height;
-  private x_size = 640;
-  private y_size = 640;
+  private x_size = 440;
+  private y_size = 440;
 
   private redrawGridNecessary = false;
 

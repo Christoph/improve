@@ -57,8 +57,14 @@
                 redraw.bind="redraw_parallel"
                 data.bind="data_parallel"></parallel-coordinates-gauss>
             </div>
+          </div>
+          <div aubs-collapse="collapsed.bind: collapsed_grid">
+            <button class="btn btn-primary btn-block" click.delegate="simulate()">
+                Show Simulation
+            </button>
             <spatial-grid
-                data.bind="data_grid">
+                data.bind="data_grid"
+                redraw.bind="redraw">
             </spatial-grid>
           </div>
 
