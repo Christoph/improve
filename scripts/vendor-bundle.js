@@ -10353,6 +10353,334 @@ numeric.svd= function svd(A) {
 };
 
 
+/*
+ * A speed-improved perlin and simplex noise algorithms for 2D.
+ *
+ * Based on example code by Stefan Gustavson (stegu@itn.liu.se).
+ * Optimisations by Peter Eastman (peastman@drizzle.stanford.edu).
+ * Better rank ordering method by Stefan Gustavson in 2012.
+ * Converted to Javascript by Joseph Gentle.
+ *
+ * Version 2012-03-09
+ *
+ * This code was placed in the public domain by its original author,
+ * Stefan Gustavson. You may use it as you see fit, but
+ * attribution is appreciated.
+ *
+ */
+
+(function(global){
+
+  // Passing in seed will seed this Noise instance
+  function Noise(seed) {
+    function Grad(x, y, z) {
+      this.x = x; this.y = y; this.z = z;
+    }
+
+    Grad.prototype.dot2 = function(x, y) {
+      return this.x*x + this.y*y;
+    };
+
+    Grad.prototype.dot3 = function(x, y, z) {
+      return this.x*x + this.y*y + this.z*z;
+    };
+
+    this.grad3 = [new Grad(1,1,0),new Grad(-1,1,0),new Grad(1,-1,0),new Grad(-1,-1,0),
+                 new Grad(1,0,1),new Grad(-1,0,1),new Grad(1,0,-1),new Grad(-1,0,-1),
+                 new Grad(0,1,1),new Grad(0,-1,1),new Grad(0,1,-1),new Grad(0,-1,-1)];
+
+    this.p = [151,160,137,91,90,15,
+    131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+    190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+    88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+    77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+    102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+    135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+    5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+    223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+    129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+    251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+    49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+    138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180];
+    // To remove the need for index wrapping, double the permutation table length
+    this.perm = new Array(512);
+    this.gradP = new Array(512);
+
+    this.seed(seed || 0);
+  }
+
+  // This isn't a very good seeding function, but it works ok. It supports 2^16
+  // different seed values. Write something better if you need more seeds.
+  Noise.prototype.seed = function(seed) {
+    if(seed > 0 && seed < 1) {
+      // Scale the seed out
+      seed *= 65536;
+    }
+
+    seed = Math.floor(seed);
+    if(seed < 256) {
+      seed |= seed << 8;
+    }
+
+    var p = this.p;
+    for(var i = 0; i < 256; i++) {
+      var v;
+      if (i & 1) {
+        v = p[i] ^ (seed & 255);
+      } else {
+        v = p[i] ^ ((seed>>8) & 255);
+      }
+
+      var perm = this.perm;
+      var gradP = this.gradP;
+      perm[i] = perm[i + 256] = v;
+      gradP[i] = gradP[i + 256] = this.grad3[v % 12];
+    }
+  };
+
+  /*
+  for(var i=0; i<256; i++) {
+    perm[i] = perm[i + 256] = p[i];
+    gradP[i] = gradP[i + 256] = grad3[perm[i] % 12];
+  }*/
+
+  // Skewing and unskewing factors for 2, 3, and 4 dimensions
+  var F2 = 0.5*(Math.sqrt(3)-1);
+  var G2 = (3-Math.sqrt(3))/6;
+
+  var F3 = 1/3;
+  var G3 = 1/6;
+
+  // 2D simplex noise
+  Noise.prototype.simplex2 = function(xin, yin) {
+    var n0, n1, n2; // Noise contributions from the three corners
+    // Skew the input space to determine which simplex cell we're in
+    var s = (xin+yin)*F2; // Hairy factor for 2D
+    var i = Math.floor(xin+s);
+    var j = Math.floor(yin+s);
+    var t = (i+j)*G2;
+    var x0 = xin-i+t; // The x,y distances from the cell origin, unskewed.
+    var y0 = yin-j+t;
+    // For the 2D case, the simplex shape is an equilateral triangle.
+    // Determine which simplex we are in.
+    var i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
+    if(x0>y0) { // lower triangle, XY order: (0,0)->(1,0)->(1,1)
+      i1=1; j1=0;
+    } else {    // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+      i1=0; j1=1;
+    }
+    // A step of (1,0) in (i,j) means a step of (1-c,-c) in (x,y), and
+    // a step of (0,1) in (i,j) means a step of (-c,1-c) in (x,y), where
+    // c = (3-sqrt(3))/6
+    var x1 = x0 - i1 + G2; // Offsets for middle corner in (x,y) unskewed coords
+    var y1 = y0 - j1 + G2;
+    var x2 = x0 - 1 + 2 * G2; // Offsets for last corner in (x,y) unskewed coords
+    var y2 = y0 - 1 + 2 * G2;
+    // Work out the hashed gradient indices of the three simplex corners
+    i &= 255;
+    j &= 255;
+
+    var perm = this.perm;
+    var gradP = this.gradP;
+    var gi0 = gradP[i+perm[j]];
+    var gi1 = gradP[i+i1+perm[j+j1]];
+    var gi2 = gradP[i+1+perm[j+1]];
+    // Calculate the contribution from the three corners
+    var t0 = 0.5 - x0*x0-y0*y0;
+    if(t0<0) {
+      n0 = 0;
+    } else {
+      t0 *= t0;
+      n0 = t0 * t0 * gi0.dot2(x0, y0);  // (x,y) of grad3 used for 2D gradient
+    }
+    var t1 = 0.5 - x1*x1-y1*y1;
+    if(t1<0) {
+      n1 = 0;
+    } else {
+      t1 *= t1;
+      n1 = t1 * t1 * gi1.dot2(x1, y1);
+    }
+    var t2 = 0.5 - x2*x2-y2*y2;
+    if(t2<0) {
+      n2 = 0;
+    } else {
+      t2 *= t2;
+      n2 = t2 * t2 * gi2.dot2(x2, y2);
+    }
+    // Add contributions from each corner to get the final noise value.
+    // The result is scaled to return values in the interval [-1,1].
+    return 70 * (n0 + n1 + n2);
+  };
+
+  // 3D simplex noise
+  Noise.prototype.simplex3 = function(xin, yin, zin) {
+    var n0, n1, n2, n3; // Noise contributions from the four corners
+
+    // Skew the input space to determine which simplex cell we're in
+    var s = (xin+yin+zin)*F3; // Hairy factor for 2D
+    var i = Math.floor(xin+s);
+    var j = Math.floor(yin+s);
+    var k = Math.floor(zin+s);
+
+    var t = (i+j+k)*G3;
+    var x0 = xin-i+t; // The x,y distances from the cell origin, unskewed.
+    var y0 = yin-j+t;
+    var z0 = zin-k+t;
+
+    // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
+    // Determine which simplex we are in.
+    var i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
+    var i2, j2, k2; // Offsets for third corner of simplex in (i,j,k) coords
+    if(x0 >= y0) {
+      if(y0 >= z0)      { i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; }
+      else if(x0 >= z0) { i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; }
+      else              { i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; }
+    } else {
+      if(y0 < z0)      { i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; }
+      else if(x0 < z0) { i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; }
+      else             { i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; }
+    }
+    // A step of (1,0,0) in (i,j,k) means a step of (1-c,-c,-c) in (x,y,z),
+    // a step of (0,1,0) in (i,j,k) means a step of (-c,1-c,-c) in (x,y,z), and
+    // a step of (0,0,1) in (i,j,k) means a step of (-c,-c,1-c) in (x,y,z), where
+    // c = 1/6.
+    var x1 = x0 - i1 + G3; // Offsets for second corner
+    var y1 = y0 - j1 + G3;
+    var z1 = z0 - k1 + G3;
+
+    var x2 = x0 - i2 + 2 * G3; // Offsets for third corner
+    var y2 = y0 - j2 + 2 * G3;
+    var z2 = z0 - k2 + 2 * G3;
+
+    var x3 = x0 - 1 + 3 * G3; // Offsets for fourth corner
+    var y3 = y0 - 1 + 3 * G3;
+    var z3 = z0 - 1 + 3 * G3;
+
+    // Work out the hashed gradient indices of the four simplex corners
+    i &= 255;
+    j &= 255;
+    k &= 255;
+
+    var perm = this.perm;
+    var gradP = this.gradP;
+    var gi0 = gradP[i+   perm[j+   perm[k   ]]];
+    var gi1 = gradP[i+i1+perm[j+j1+perm[k+k1]]];
+    var gi2 = gradP[i+i2+perm[j+j2+perm[k+k2]]];
+    var gi3 = gradP[i+ 1+perm[j+ 1+perm[k+ 1]]];
+
+    // Calculate the contribution from the four corners
+    var t0 = 0.5 - x0*x0-y0*y0-z0*z0;
+    if(t0<0) {
+      n0 = 0;
+    } else {
+      t0 *= t0;
+      n0 = t0 * t0 * gi0.dot3(x0, y0, z0);  // (x,y) of grad3 used for 2D gradient
+    }
+    var t1 = 0.5 - x1*x1-y1*y1-z1*z1;
+    if(t1<0) {
+      n1 = 0;
+    } else {
+      t1 *= t1;
+      n1 = t1 * t1 * gi1.dot3(x1, y1, z1);
+    }
+    var t2 = 0.5 - x2*x2-y2*y2-z2*z2;
+    if(t2<0) {
+      n2 = 0;
+    } else {
+      t2 *= t2;
+      n2 = t2 * t2 * gi2.dot3(x2, y2, z2);
+    }
+    var t3 = 0.5 - x3*x3-y3*y3-z3*z3;
+    if(t3<0) {
+      n3 = 0;
+    } else {
+      t3 *= t3;
+      n3 = t3 * t3 * gi3.dot3(x3, y3, z3);
+    }
+    // Add contributions from each corner to get the final noise value.
+    // The result is scaled to return values in the interval [-1,1].
+    return 32 * (n0 + n1 + n2 + n3);
+
+  };
+
+  // ##### Perlin noise stuff
+
+  function fade(t) {
+    return t*t*t*(t*(t*6-15)+10);
+  }
+
+  function lerp(a, b, t) {
+    return (1-t)*a + t*b;
+  }
+
+  // 2D Perlin Noise
+  Noise.prototype.perlin2 = function(x, y) {
+    // Find unit grid cell containing point
+    var X = Math.floor(x), Y = Math.floor(y);
+    // Get relative xy coordinates of point within that cell
+    x = x - X; y = y - Y;
+    // Wrap the integer cells at 255 (smaller integer period can be introduced here)
+    X = X & 255; Y = Y & 255;
+
+    // Calculate noise contributions from each of the four corners
+    var perm = this.perm;
+    var gradP = this.gradP;
+    var n00 = gradP[X+perm[Y]].dot2(x, y);
+    var n01 = gradP[X+perm[Y+1]].dot2(x, y-1);
+    var n10 = gradP[X+1+perm[Y]].dot2(x-1, y);
+    var n11 = gradP[X+1+perm[Y+1]].dot2(x-1, y-1);
+
+    // Compute the fade curve value for x
+    var u = fade(x);
+
+    // Interpolate the four results
+    return lerp(
+        lerp(n00, n10, u),
+        lerp(n01, n11, u),
+       fade(y));
+  };
+
+  // 3D Perlin Noise
+  Noise.prototype.perlin3 = function(x, y, z) {
+    // Find unit grid cell containing point
+    var X = Math.floor(x), Y = Math.floor(y), Z = Math.floor(z);
+    // Get relative xyz coordinates of point within that cell
+    x = x - X; y = y - Y; z = z - Z;
+    // Wrap the integer cells at 255 (smaller integer period can be introduced here)
+    X = X & 255; Y = Y & 255; Z = Z & 255;
+
+    // Calculate noise contributions from each of the eight corners
+    var perm = this.perm;
+    var gradP = this.gradP;
+    var n000 = gradP[X+  perm[Y+  perm[Z  ]]].dot3(x,   y,     z);
+    var n001 = gradP[X+  perm[Y+  perm[Z+1]]].dot3(x,   y,   z-1);
+    var n010 = gradP[X+  perm[Y+1+perm[Z  ]]].dot3(x,   y-1,   z);
+    var n011 = gradP[X+  perm[Y+1+perm[Z+1]]].dot3(x,   y-1, z-1);
+    var n100 = gradP[X+1+perm[Y+  perm[Z  ]]].dot3(x-1,   y,   z);
+    var n101 = gradP[X+1+perm[Y+  perm[Z+1]]].dot3(x-1,   y, z-1);
+    var n110 = gradP[X+1+perm[Y+1+perm[Z  ]]].dot3(x-1, y-1,   z);
+    var n111 = gradP[X+1+perm[Y+1+perm[Z+1]]].dot3(x-1, y-1, z-1);
+
+    // Compute the fade curve value for x, y, z
+    var u = fade(x);
+    var v = fade(y);
+    var w = fade(z);
+
+    // Interpolate
+    return lerp(
+        lerp(
+          lerp(n000, n100, u),
+          lerp(n001, n101, u), w),
+        lerp(
+          lerp(n010, n110, u),
+          lerp(n011, n111, u), w),
+       v);
+  };
+
+  global.Noise = Noise;
+
+})(typeof module === "undefined" ? this : module.exports);
+
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -44375,10 +44703,10 @@ define('aurelia-bootstrap/utils/bootstrap-config',['exports', './bootstrap-optio
 });
 define('text!aurelia-bootstrap/accordion/aubs-accordion-group.html', ['module'], function(module) { module.exports = "<template>\n    <div class.bind=\"isBootstrapVersion(3) ? 'panel ' + panelClass : 'card' \">\n        <div role=\"tab\" class.bind=\"isBootstrapVersion(3) ? 'panel-heading' : 'card-header'\">\n            <template replaceable part=\"header\">\n                <h4 class.bind=\"isBootstrapVersion(3) ? 'panel-title' : 'mb-0'\">\n\n                    <a href=\"javascript:void(0)\" innerHTML.bind=\"title\" click.delegate=\"toggle()\" show.bind=\"!disabled\"></a>\n                    <span class=\"text-muted\" innerHTML.bind=\"title\" show.bind=\"disabled\"></span>\n                </h4>\n            </template>\n        </div>\n\n        <div class=\"collapse\" role=\"tabpanel\" ref=\"$collapse\">\n            <div class.bind=\"isBootstrapVersion(3) ? 'panel-body' : 'card-block'\">\n                <slot></slot>\n            </div>\n        </div>\n    </div>\n</template>"; });
 define('text!aurelia-bootstrap/accordion/aubs-accordion.html', ['module'], function(module) { module.exports = "<template>\n    <div role=\"tablist\" class.bind=\"bootstrapOptions.version === 3 ? 'panel-group' : ''\">\n        <slot></slot>\n    </div>\n</template>"; });
-define('text!aurelia-bootstrap/pagination/aubs-pagination.html', ['module'], function(module) { module.exports = "<template>\n    <template replaceable part=\"pagination\">\n        <nav hide.bind=\"hideSinglePage && totalPages === 1\">\n            <ul class=\"pagination\">\n\n                <li class=\"page-item ${currentPage === 1 ? 'disabled' : ''}\" if.bind=\"boundaryLinks\">\n                    <a class=\"page-link\" aria-label=\"Previous\" click.delegate=\"firstPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"firstText\"></span>\n                    </a>\n                </li>\n\n                <li class=\"page-item ${currentPage === 1 ? 'disabled' : ''}\" if.bind=\"directionLinks\">\n                    <a class=\"page-link\" aria-label=\"Previous\" click.delegate=\"previousPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"previousText\"></span>\n                    </a>\n                </li>\n\n                <li repeat.for=\"page of displayPages\" class=\"page-item ${currentPage === page.value ? 'active' : ''}\">\n                    <a class=\"page-link\" click.delegate=\"selectPage(page.value)\">${page.title}</a>\n                </li>\n\n                <li class=\"page-item ${currentPage === totalPages ? 'disabled' : ''}\" if.bind=\"directionLinks\">\n                    <a class=\"page-link\" aria-label=\"Next\" click.delegate=\"nextPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"nextText\"></span>\n                    </a>\n                </li>\n\n                <li class=\"page-item ${currentPage === totalPages ? 'disabled' : ''}\" if.bind=\"boundaryLinks\">\n                    <a class=\"page-link\" aria-label=\"Previous\" click.delegate=\"lastPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"lastText\"></span>\n                    </a>\n                </li>\n            </ul>\n        </nav>\n    </template>\n</template>"; });
 define('text!aurelia-bootstrap/tabs/aubs-tab.html', ['module'], function(module) { module.exports = "<template>\n    <div role=\"tabpanel\" class=\"tab-pane\">\n        <slot></slot>\n    </div>\n</template>"; });
 define('text!aurelia-bootstrap/tabs/aubs-tabset.html', ['module'], function(module) { module.exports = "<template>\n    <ul class=\"nav ${tabsClass} ${vertical ? 'nav-stacked' : ''}\">\n        <li repeat.for=\"tab of tabs\" class=\"nav-item ${tab.active ? 'active' : ''} ${tab.disabled ? 'disabled' : ''}\">\n            <a class=\"nav-link ${tab.active ? 'active' : ''} ${tab.disabled ? 'disabled' : ''}\"\n               href=\"javascript:void(0)\" click.delegate=\"selectTab(tab)\" innerhtml.bind=\"tab.header\"></a>\n        </li>\n    </ul>\n\n    <div class=\"tab-content\">\n        <slot></slot>\n    </div>\n\n</template>"; });
 define('text!aurelia-bootstrap/typeahead/aubs-typeahead.html', ['module'], function(module) { module.exports = "<template>\n\n    <require from=\"./typeahead-highlight\"></require>\n\n    <div class=\"dropdown\" ref=\"dropdown\">\n        <input class=\"form form-control ${inputClass}\" placeholder.bind=\"placeholder\" ref=\"input\"\n               value.bind=\"filter & debounce:debounce\" disabled.bind=\"disabled\" id.bind=\"id\">\n\n        <ul class=\"dropdown-menu\" if.bind=\"!v4\">\n            <li show.bind=\"displayData.length === 0 && !loading\" class=\"text-center\">\n                <span class=\"text-muted\" innerhtml.bind=\"noResultsText\"></span>\n            </li>\n\n            <li show.bind=\"loading\" class=\"text-center\">\n                <span class=\"text-muted\" innerhtml.bind=\"loadingText\"></span>\n            </li>\n\n            <li repeat.for=\"item of displayData\" show.bind=\"!loading\" class.bind=\"focusedItem === item ? 'active' : ''\">\n                <template part=\"item-template\" replaceable>\n                    <a class=\"dropdown-item\" href=\"javascript:void(0)\" click.delegate=\"itemSelected(item)\"\n                     innerhtml.bind=\"getName(item) | typeaheadHighlight:filter\">\n\n                    </a>\n                </template>              \n            </li>\n        </ul>\n\n        <div class=\"dropdown-menu\" if.bind=\"v4\">\n            <h6 class=\"dropdown-header text-center\" show.bind=\"displayData.length == 0 && !loading\" innerhtml.bind=\"noResultsText\"></h6>\n            <h6 class=\"dropdown-header text-center\" show.bind=\"loading\" innerhtml.bind=\"loadingText\"></h6>\n            \n            <template repeat.for=\"item of displayData\">\n                <template part=\"item-template\" replaceable>\n                    <a class=\"dropdown-item ${focusedItem === item  ? 'active' : ''}\" href=\"javascript:void(0)\"\n                     show.bind=\"!loading\" click.delegate=\"itemSelected(item)\"\n                     innerhtml.bind=\"getName(item) | typeaheadHighlight:filter\"></a>\n                </template>\n            </template>            \n        </div>\n    </div>\n</template>\n"; });
+define('text!aurelia-bootstrap/pagination/aubs-pagination.html', ['module'], function(module) { module.exports = "<template>\n    <template replaceable part=\"pagination\">\n        <nav hide.bind=\"hideSinglePage && totalPages === 1\">\n            <ul class=\"pagination\">\n\n                <li class=\"page-item ${currentPage === 1 ? 'disabled' : ''}\" if.bind=\"boundaryLinks\">\n                    <a class=\"page-link\" aria-label=\"Previous\" click.delegate=\"firstPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"firstText\"></span>\n                    </a>\n                </li>\n\n                <li class=\"page-item ${currentPage === 1 ? 'disabled' : ''}\" if.bind=\"directionLinks\">\n                    <a class=\"page-link\" aria-label=\"Previous\" click.delegate=\"previousPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"previousText\"></span>\n                    </a>\n                </li>\n\n                <li repeat.for=\"page of displayPages\" class=\"page-item ${currentPage === page.value ? 'active' : ''}\">\n                    <a class=\"page-link\" click.delegate=\"selectPage(page.value)\">${page.title}</a>\n                </li>\n\n                <li class=\"page-item ${currentPage === totalPages ? 'disabled' : ''}\" if.bind=\"directionLinks\">\n                    <a class=\"page-link\" aria-label=\"Next\" click.delegate=\"nextPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"nextText\"></span>\n                    </a>\n                </li>\n\n                <li class=\"page-item ${currentPage === totalPages ? 'disabled' : ''}\" if.bind=\"boundaryLinks\">\n                    <a class=\"page-link\" aria-label=\"Previous\" click.delegate=\"lastPage()\">\n                        <span aria-hidden=\"true\" innerhtml.bind=\"lastText\"></span>\n                    </a>\n                </li>\n            </ul>\n        </nav>\n    </template>\n</template>"; });
 define('aurelia-templating-resources/aurelia-templating-resources',['exports', 'aurelia-pal', './compose', './if', './with', './repeat', './show', './hide', './sanitize-html', './replaceable', './focus', 'aurelia-templating', './css-resource', './html-sanitizer', './attr-binding-behavior', './binding-mode-behaviors', './throttle-binding-behavior', './debounce-binding-behavior', './self-binding-behavior', './signal-binding-behavior', './binding-signaler', './update-trigger-binding-behavior', './abstract-repeater', './repeat-strategy-locator', './html-resource-plugin', './null-repeat-strategy', './array-repeat-strategy', './map-repeat-strategy', './set-repeat-strategy', './number-repeat-strategy', './repeat-utilities', './analyze-view-factory', './aurelia-hide-style'], function (exports, _aureliaPal, _compose, _if, _with, _repeat, _show, _hide, _sanitizeHtml, _replaceable, _focus, _aureliaTemplating, _cssResource, _htmlSanitizer, _attrBindingBehavior, _bindingModeBehaviors, _throttleBindingBehavior, _debounceBindingBehavior, _selfBindingBehavior, _signalBindingBehavior, _bindingSignaler, _updateTriggerBindingBehavior, _abstractRepeater, _repeatStrategyLocator, _htmlResourcePlugin, _nullRepeatStrategy, _arrayRepeatStrategy, _mapRepeatStrategy, _setRepeatStrategy, _numberRepeatStrategy, _repeatUtilities, _analyzeViewFactory, _aureliaHideStyle) {
   'use strict';
 
@@ -64352,4 +64680,4 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 define('text!ion-rangeslider/css/ion.rangeSlider.css', ['module'], function(module) { module.exports = "/* Ion.RangeSlider\n// css version 2.0.3\n// © 2013-2014 Denis Ineshin | IonDen.com\n// ===================================================================================================================*/\n\n/* =====================================================================================================================\n// RangeSlider */\n\n.irs {\n    position: relative; display: block;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n     -khtml-user-select: none;\n       -moz-user-select: none;\n        -ms-user-select: none;\n            user-select: none;\n}\n    .irs-line {\n        position: relative; display: block;\n        overflow: hidden;\n        outline: none !important;\n    }\n        .irs-line-left, .irs-line-mid, .irs-line-right {\n            position: absolute; display: block;\n            top: 0;\n        }\n        .irs-line-left {\n            left: 0; width: 11%;\n        }\n        .irs-line-mid {\n            left: 9%; width: 82%;\n        }\n        .irs-line-right {\n            right: 0; width: 11%;\n        }\n\n    .irs-bar {\n        position: absolute; display: block;\n        left: 0; width: 0;\n    }\n        .irs-bar-edge {\n            position: absolute; display: block;\n            top: 0; left: 0;\n        }\n\n    .irs-shadow {\n        position: absolute; display: none;\n        left: 0; width: 0;\n    }\n\n    .irs-slider {\n        position: absolute; display: block;\n        cursor: default;\n        z-index: 1;\n    }\n        .irs-slider.single {\n\n        }\n        .irs-slider.from {\n\n        }\n        .irs-slider.to {\n\n        }\n        .irs-slider.type_last {\n            z-index: 2;\n        }\n\n    .irs-min {\n        position: absolute; display: block;\n        left: 0;\n        cursor: default;\n    }\n    .irs-max {\n        position: absolute; display: block;\n        right: 0;\n        cursor: default;\n    }\n\n    .irs-from, .irs-to, .irs-single {\n        position: absolute; display: block;\n        top: 0; left: 0;\n        cursor: default;\n        white-space: nowrap;\n    }\n\n.irs-grid {\n    position: absolute; display: none;\n    bottom: 0; left: 0;\n    width: 100%; height: 20px;\n}\n.irs-with-grid .irs-grid {\n    display: block;\n}\n    .irs-grid-pol {\n        position: absolute;\n        top: 0; left: 0;\n        width: 1px; height: 8px;\n        background: #000;\n    }\n    .irs-grid-pol.small {\n        height: 4px;\n    }\n    .irs-grid-text {\n        position: absolute;\n        bottom: 0; left: 0;\n        white-space: nowrap;\n        text-align: center;\n        font-size: 9px; line-height: 9px;\n        padding: 0 3px;\n        color: #000;\n    }\n\n.irs-disable-mask {\n    position: absolute; display: block;\n    top: 0; left: -1%;\n    width: 102%; height: 100%;\n    cursor: default;\n    background: rgba(0,0,0,0.0);\n    z-index: 2;\n}\n.lt-ie9 .irs-disable-mask {\n    background: #000;\n    filter: alpha(opacity=0);\n    cursor: not-allowed;\n}\n\n.irs-disabled {\n    opacity: 0.4;\n}\n\n\n.irs-hidden-input {\n    position: absolute !important;\n    display: block !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 0 !important;\n    height: 0 !important;\n    font-size: 0 !important;\n    line-height: 0 !important;\n    padding: 0 !important;\n    margin: 0 !important;\n    overflow: hidden;\n    outline: none !important;\n    z-index: -9999 !important;\n    background: none !important;\n    border-style: solid !important;\n    border-color: transparent !important;\n}\n"; });
 define('text!ion-rangeslider/css/ion.rangeSlider.skinHTML5.css', ['module'], function(module) { module.exports = "/* Ion.RangeSlider, Simple Skin\n// css version 2.0.3\n// © Denis Ineshin, 2014    https://github.com/IonDen\n// © guybowden, 2014        https://github.com/guybowden\n// ===================================================================================================================*/\n\n/* =====================================================================================================================\n// Skin details */\n\n.irs {\n    height: 55px;\n}\n.irs-with-grid {\n    height: 75px;\n}\n.irs-line {\n    height: 10px; top: 33px;\n    background: #EEE;\n    background: linear-gradient(to bottom, #DDD -50%, #FFF 150%); /* W3C */\n    border: 1px solid #CCC;\n    border-radius: 16px;\n    -moz-border-radius: 16px;\n}\n    .irs-line-left {\n        height: 8px;\n    }\n    .irs-line-mid {\n        height: 8px;\n    }\n    .irs-line-right {\n        height: 8px;\n    }\n\n.irs-bar {\n    height: 10px; top: 33px;\n    border-top: 1px solid #428bca;\n    border-bottom: 1px solid #428bca;\n    background: #428bca;\n    background: linear-gradient(to top, rgba(66,139,202,1) 0%,rgba(127,195,232,1) 100%); /* W3C */\n}\n    .irs-bar-edge {\n        height: 10px; top: 33px;\n        width: 14px;\n        border: 1px solid #428bca;\n        border-right: 0;\n        background: #428bca;\n        background: linear-gradient(to top, rgba(66,139,202,1) 0%,rgba(127,195,232,1) 100%); /* W3C */\n        border-radius: 16px 0 0 16px;\n        -moz-border-radius: 16px 0 0 16px;\n    }\n\n.irs-shadow {\n    height: 2px; top: 38px;\n    background: #000;\n    opacity: 0.3;\n    border-radius: 5px;\n    -moz-border-radius: 5px;\n}\n.lt-ie9 .irs-shadow {\n    filter: alpha(opacity=30);\n}\n\n.irs-slider {\n    top: 25px;\n    width: 27px; height: 27px;\n    border: 1px solid #AAA;\n    background: #DDD;\n    background: linear-gradient(to bottom, rgba(255,255,255,1) 0%,rgba(220,220,220,1) 20%,rgba(255,255,255,1) 100%); /* W3C */\n    border-radius: 27px;\n    -moz-border-radius: 27px;\n    box-shadow: 1px 1px 3px rgba(0,0,0,0.3);\n    cursor: pointer;\n}\n\n.irs-slider.state_hover, .irs-slider:hover {\n    background: #FFF;\n}\n\n.irs-min, .irs-max {\n    color: #333;\n    font-size: 12px; line-height: 1.333;\n    text-shadow: none;\n    top: 0;\n    padding: 1px 5px;\n    background: rgba(0,0,0,0.1);\n    border-radius: 3px;\n    -moz-border-radius: 3px;\n}\n\n.lt-ie9 .irs-min, .lt-ie9 .irs-max {\n    background: #ccc;\n}\n\n.irs-from, .irs-to, .irs-single {\n    color: #fff;\n    font-size: 14px; line-height: 1.333;\n    text-shadow: none;\n    padding: 1px 5px;\n    background: #428bca;\n    border-radius: 3px;\n    -moz-border-radius: 3px;\n}\n.lt-ie9 .irs-from, .lt-ie9 .irs-to, .lt-ie9 .irs-single {\n    background: #999;\n}\n\n.irs-grid {\n    height: 27px;\n}\n.irs-grid-pol {\n    opacity: 0.5;\n    background: #428bca;\n}\n.irs-grid-pol.small {\n    background: #999;\n}\n\n.irs-grid-text {\n    bottom: 5px;\n    color: #99a4ac;\n}\n\n.irs-disabled {\n}\n"; });
-function _aureliaConfigureModuleLoader(){requirejs.config({"baseUrl":"src/","paths":{"root":"src","resources":"resources","elements":"resources/elements","attributes":"resources/attributes","valueConverters":"resources/value-converters","bindingBehaviors":"resources/binding-behaviors","assets":[{"src":"./node_modules/bootstrap/dist/fonts/**/*.*","dest":"./bootstrap/fonts"},{"src":"./node_modules/bootstrap/dist/css/bootstrap.css.map","dest":"./bootstrap/css"}],"aurelia-binding":"../node_modules/aurelia-binding/dist/amd/aurelia-binding","aurelia-bootstrapper":"../node_modules/aurelia-bootstrapper/dist/amd/aurelia-bootstrapper","aurelia-computed":"../node_modules/aurelia-computed/dist/amd/aurelia-computed","aurelia-dependency-injection":"../node_modules/aurelia-dependency-injection/dist/amd/aurelia-dependency-injection","aurelia-event-aggregator":"../node_modules/aurelia-event-aggregator/dist/amd/aurelia-event-aggregator","aurelia-framework":"../node_modules/aurelia-framework/dist/amd/aurelia-framework","aurelia-history":"../node_modules/aurelia-history/dist/amd/aurelia-history","aurelia-history-browser":"../node_modules/aurelia-history-browser/dist/amd/aurelia-history-browser","aurelia-loader":"../node_modules/aurelia-loader/dist/amd/aurelia-loader","aurelia-loader-default":"../node_modules/aurelia-loader-default/dist/amd/aurelia-loader-default","aurelia-logging":"../node_modules/aurelia-logging/dist/amd/aurelia-logging","aurelia-logging-console":"../node_modules/aurelia-logging-console/dist/amd/aurelia-logging-console","aurelia-metadata":"../node_modules/aurelia-metadata/dist/amd/aurelia-metadata","aurelia-pal":"../node_modules/aurelia-pal/dist/amd/aurelia-pal","aurelia-pal-browser":"../node_modules/aurelia-pal-browser/dist/amd/aurelia-pal-browser","aurelia-path":"../node_modules/aurelia-path/dist/amd/aurelia-path","aurelia-polyfills":"../node_modules/aurelia-polyfills/dist/amd/aurelia-polyfills","aurelia-route-recognizer":"../node_modules/aurelia-route-recognizer/dist/amd/aurelia-route-recognizer","aurelia-router":"../node_modules/aurelia-router/dist/amd/aurelia-router","aurelia-task-queue":"../node_modules/aurelia-task-queue/dist/amd/aurelia-task-queue","aurelia-templating":"../node_modules/aurelia-templating/dist/amd/aurelia-templating","aurelia-templating-binding":"../node_modules/aurelia-templating-binding/dist/amd/aurelia-templating-binding","text":"../node_modules/text/text","velocity-animate":"../node_modules/velocity-animate/velocity","tether":"../node_modules/tether/dist/js/tether","app-bundle":"../scripts/app-bundle"},"packages":[{"name":"aurelia-bootstrap","location":"../node_modules/aurelia-bootstrap/dist/amd","main":"index"},{"name":"aurelia-templating-resources","location":"../node_modules/aurelia-templating-resources/dist/amd","main":"aurelia-templating-resources"},{"name":"aurelia-templating-router","location":"../node_modules/aurelia-templating-router/dist/amd","main":"aurelia-templating-router"},{"name":"aurelia-testing","location":"../node_modules/aurelia-testing/dist/amd","main":"aurelia-testing"},{"name":"lodash","location":"../node_modules/lodash","main":"lodash.min"},{"name":"papaparse","location":"../node_modules/papaparse","main":"papaparse.min"},{"name":"jquery","location":"../node_modules/jquery/dist","main":"jquery.min"},{"name":"bootstrap","location":"../node_modules/bootstrap/dist","main":"js/bootstrap.min"},{"name":"d3","location":"../node_modules/d3/build","main":"d3.js"},{"name":"d3-extended","location":"../node_modules/d3-extended","main":"d3-extended.min"},{"name":"d3-random","location":"../node_modules/d3-random/build","main":"d3-random.min"},{"name":"ion-rangeslider","location":"../node_modules/ion-rangeslider","main":"js/ion.rangeSlider"}],"stubModules":["text"],"shim":{"bootstrap":{"deps":["jquery"]},"d3-extended":{"deps":["d3"]},"d3-random":{"deps":["d3"]},"ion-rangeslider":{"deps":["jquery"]}},"bundles":{"app-bundle":["app","environment","main","navbar","abbvie/abb","bars/bars","details/details","charts/dual-bar-chart","charts/dual-stacked-bar-chart","charts/dynamic-stacked-bar-chart","charts/line-chart-focus","charts/line-chart-gauss","charts/line-chart-live","charts/parallel-coordinates-gauss","charts/parallel-coordinates-vertical","charts/spatial-grid","charts/stacked-bar-chart","drift/drift","empty/no-selection","helper/sampling","gauss/gauss","models/genetic","models/sir","models/spatial-migration","models/spatial-sir","spatial_migration/migration","resources/index","spatial_sir/epidemics","vpsa/vpsa","drift/chart","gauss/chart","spatial_sir/chart","spatial_migration/chart","vpsa/chart"]}})}
+function _aureliaConfigureModuleLoader(){requirejs.config({"baseUrl":"src/","paths":{"root":"src","resources":"resources","elements":"resources/elements","attributes":"resources/attributes","valueConverters":"resources/value-converters","bindingBehaviors":"resources/binding-behaviors","assets":[{"src":"./node_modules/bootstrap/dist/fonts/**/*.*","dest":"./bootstrap/fonts"},{"src":"./node_modules/bootstrap/dist/css/bootstrap.css.map","dest":"./bootstrap/css"}],"aurelia-binding":"../node_modules/aurelia-binding/dist/amd/aurelia-binding","aurelia-bootstrapper":"../node_modules/aurelia-bootstrapper/dist/amd/aurelia-bootstrapper","aurelia-computed":"../node_modules/aurelia-computed/dist/amd/aurelia-computed","aurelia-dependency-injection":"../node_modules/aurelia-dependency-injection/dist/amd/aurelia-dependency-injection","aurelia-event-aggregator":"../node_modules/aurelia-event-aggregator/dist/amd/aurelia-event-aggregator","aurelia-framework":"../node_modules/aurelia-framework/dist/amd/aurelia-framework","aurelia-history":"../node_modules/aurelia-history/dist/amd/aurelia-history","aurelia-history-browser":"../node_modules/aurelia-history-browser/dist/amd/aurelia-history-browser","aurelia-loader":"../node_modules/aurelia-loader/dist/amd/aurelia-loader","aurelia-loader-default":"../node_modules/aurelia-loader-default/dist/amd/aurelia-loader-default","aurelia-logging":"../node_modules/aurelia-logging/dist/amd/aurelia-logging","aurelia-logging-console":"../node_modules/aurelia-logging-console/dist/amd/aurelia-logging-console","aurelia-metadata":"../node_modules/aurelia-metadata/dist/amd/aurelia-metadata","aurelia-pal":"../node_modules/aurelia-pal/dist/amd/aurelia-pal","aurelia-pal-browser":"../node_modules/aurelia-pal-browser/dist/amd/aurelia-pal-browser","aurelia-path":"../node_modules/aurelia-path/dist/amd/aurelia-path","aurelia-polyfills":"../node_modules/aurelia-polyfills/dist/amd/aurelia-polyfills","aurelia-route-recognizer":"../node_modules/aurelia-route-recognizer/dist/amd/aurelia-route-recognizer","aurelia-router":"../node_modules/aurelia-router/dist/amd/aurelia-router","aurelia-task-queue":"../node_modules/aurelia-task-queue/dist/amd/aurelia-task-queue","aurelia-templating":"../node_modules/aurelia-templating/dist/amd/aurelia-templating","aurelia-templating-binding":"../node_modules/aurelia-templating-binding/dist/amd/aurelia-templating-binding","text":"../node_modules/text/text","velocity-animate":"../node_modules/velocity-animate/velocity","tether":"../node_modules/tether/dist/js/tether","app-bundle":"../scripts/app-bundle"},"packages":[{"name":"aurelia-bootstrap","location":"../node_modules/aurelia-bootstrap/dist/amd","main":"index"},{"name":"aurelia-templating-resources","location":"../node_modules/aurelia-templating-resources/dist/amd","main":"aurelia-templating-resources"},{"name":"aurelia-templating-router","location":"../node_modules/aurelia-templating-router/dist/amd","main":"aurelia-templating-router"},{"name":"aurelia-testing","location":"../node_modules/aurelia-testing/dist/amd","main":"aurelia-testing"},{"name":"lodash","location":"../node_modules/lodash","main":"lodash.min"},{"name":"papaparse","location":"../node_modules/papaparse","main":"papaparse.min"},{"name":"jquery","location":"../node_modules/jquery/dist","main":"jquery.min"},{"name":"bootstrap","location":"../node_modules/bootstrap/dist","main":"js/bootstrap.min"},{"name":"d3","location":"../node_modules/d3/build","main":"d3.js"},{"name":"d3-extended","location":"../node_modules/d3-extended","main":"d3-extended.min"},{"name":"d3-random","location":"../node_modules/d3-random/build","main":"d3-random.min"},{"name":"ion-rangeslider","location":"../node_modules/ion-rangeslider","main":"js/ion.rangeSlider"}],"stubModules":["text"],"shim":{"bootstrap":{"deps":["jquery"]},"d3-extended":{"deps":["d3"]},"d3-random":{"deps":["d3"]},"ion-rangeslider":{"deps":["jquery"]}},"bundles":{"app-bundle":["app","environment","main","navbar","abbvie/abb","bars/bars","charts/dual-bar-chart","charts/dual-stacked-bar-chart","charts/dynamic-stacked-bar-chart","charts/line-chart-focus","charts/line-chart-gauss","charts/line-chart-live","charts/parallel-coordinates-gauss","charts/parallel-coordinates-vertical","charts/spatial-grid","charts/stacked-bar-chart","details/details","drift/drift","empty/no-selection","models/genetic","models/sir","models/small-world","models/spatial-migration","models/spatial-sir","gauss/gauss","simulation/playground","helper/sampling","resources/index","spatial_migration/migration","spatial_sir/epidemics","vpsa/vpsa","drift/chart","gauss/chart","simulation/chart","spatial_migration/chart","spatial_sir/chart","vpsa/chart"]}})}

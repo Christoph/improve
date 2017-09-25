@@ -5,11 +5,10 @@ import * as d3 from "d3"
 
 @autoinject
 export class Playground {
-    @observable brushing_p;
-    redraw;
+    // Interface params
+    simulation_initialized = true;
 
-    inFilter = []
-    outFilterList = new Map([["p", new Map()], ["pop", new Map()]]);
+    world;
 
     // Population count
     grid_selected = 100;
@@ -25,6 +24,11 @@ export class Playground {
     collapsed_out = true;
 
     timeout;
+    redraw;
+
+    constructor() {
+      this.world = new SmallWorld(this.data_grid);
+    }
 
     switch() {
       this.collapsed_input = this.collapsed_input == true ? false : true;
@@ -67,16 +71,14 @@ export class Playground {
       clearTimeout(this.timeout);
     }
 
+    initializeWorld() {
+      this.world.init_simulation()
+      this.simulation_initialized = false;
+    }
+
     compute() {
-        this.collapsed_input = true;
-        this.collapsed_out = false;
-        this.collapsed_grid = false;
-
         // Initialize Spatial Migration Simulation
-        let spatial = new SmallWorld(this.mating_selected, this.grid_selected)
-
-        spatial.init_simulation(this.data_grid)
-
-        this.timeout = setInterval( () => {spatial.run_simulation(this.data_grid, this.data_FScore)}, 200)
+        this.world.set_params(this.mating_selected)
+        this.timeout = setInterval( () => {this.world.run_simulation(this.data_FScore)}, 200)
       }
 }

@@ -21,6 +21,7 @@
     "jquery": "^3.2.1",
     "lobos": "^0.9.24",
     "lodash": "^4.17.4",
+    "noisejs": "^2.1.0",
     "numeric": "^1.2.6",
     "papaparse": "^4.3.5",
     "requirejs": "^2.3.2",

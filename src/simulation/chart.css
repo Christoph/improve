@@ -22,16 +22,12 @@
   shape-rendering: crispEdges;
 }
 
-rect.A1A1 {
-  fill: #fff;
+rect.grass {
+  fill: #36be3c;
 }
 
-rect.A1A2{
-  fill: #2176c9;
-}
-
-rect.A2A2 {
-  fill: #042029;
+rect.dirt{
+  fill: #d2c254;
 }
 
 .axis text {

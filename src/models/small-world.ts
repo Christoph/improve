@@ -1,47 +1,78 @@
 import {autoinject} from 'aurelia-framework';
 import {Sampling} from "../helper/sampling"
 import * as d3 from "d3"
+import * as _ from "lodash"
 
 // This magic line removed the error messages for numeric
 declare var lobos: any;
+declare var Noise: any;
 
 @autoinject
 export class SmallWorld {
+  // Grid params
+  noise;
+  grid_length = 100;
+  landscape_grid = [];
+  host_grid = [];
+
+  // Global params
+  max_mating_distance;
+
   params = [];
   time_range = [];
 
-  p = 0.5;
+  p = 0.8;
   simulation_counter = 0;
 
-  constructor(private max_mating_distance, private grid_length) {
+  constructor(private grid) {
+      this.noise = new Noise(Math.random())
+  }
+
+  set_params(mating_selected) {
+    this.max_mating_distance = mating_selected;
   }
 
   get_random_int(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  init_simulation(grid) {
-    grid.length = 0;
+  init_simulation() {
+    this.grid.length = 0;
     this.simulation_counter = 0;
+    let noise_map = []
+    this.noise.seed(Math.random());
 
     for(let i = 0; i < this.grid_length; i++) {
       let temp = []
+      for(let j = 0; j < this.grid_length; j++) {
+        temp[j] = this.noise.simplex2(i/50, j/50)
+      }
+      noise_map.push(temp)
+    }
 
-      for (var j = 0; j < this.grid_length; j++) {
-        let random_number = Math.random();
-
-        if (random_number < this.p*this.p) {
-            temp[j] = "A1A1";
-        }
-        else if (random_number > 1 - (1-this.p) * (1-this.p)) {
-            temp[j] = "A2A2";
+    for(let i = 0; i < this.grid_length; i++) {
+      let temp = []
+      for(let j = 0; j < this.grid_length; j++) {
+        let value = "grass"
+        if(noise_map[i][j] <= 0) {
+          value = "grass";
         }
         else {
-            temp[j] = "A1A2";
+          value = "dirt"
         }
+        temp[j] = value;
       }
+      this.landscape_grid.push(temp)
+    }
 
-      grid.push(temp)
+    this.update_grid();
+  }
+
+  update_grid() {
+    this.grid.length = 0;
+
+    for(let i = 0; i < this.grid_length; i++) {
+      this.grid.push(_.clone(this.landscape_grid[i]))
     }
   }
 
@@ -138,7 +169,7 @@ export class SmallWorld {
      return F;
   }
 
-  run_simulation(grid, data_lines) {
+  run_simulation(data_lines) {
     let temp_grid = [];
 
     for(let i = 0; i < this.grid_length; i++) {
@@ -146,23 +177,23 @@ export class SmallWorld {
 
       for(let j = 0; j < this.grid_length; j++) {
         // Select mating partner
-        let mating_partner = this.pick_mating_partner(grid,i, j);
+        let mating_partner = this.pick_mating_partner(this.grid,i, j);
 
         // Return offspring genotype
-        temp_grid[i][j] = this.get_offspring(grid[i][j], mating_partner);
+        temp_grid[i][j] = this.get_offspring(this.grid[i][j], mating_partner);
       }
     }
 
-    grid.length = 0;
+    this.grid.length = 0;
 
     for(let i = 0; i < this.grid_length; i++) {
       let temp = []
       for(let j = 0; j < this.grid_length; j++) {
         temp[j] = temp_grid[i][j]
       }
-      grid.push(temp)
+      this.grid.push(temp)
     }
 
-    data_lines.push({x: this.simulation_counter++, F: this.compute_FScore(grid)})
+    data_lines.push({x: this.simulation_counter++, F: this.compute_FScore(this.grid)})
   }
 }

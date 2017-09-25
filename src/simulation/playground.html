@@ -29,7 +29,10 @@
           <div aubs-collapse="collapsed.bind: collapsed_out">
 
           </div>
-          <button class="btn btn-primary btn-block" click.delegate="compute()">
+          <button class="btn btn-primary btn-block" click.delegate="initializeWorld()">
+              Initialize Simulation
+          </button>
+          <button disabled.bind="simulation_initialized" class="btn btn-success btn-block" click.delegate="compute()">
               Run Simulation
           </button>
           <button class="btn btn-warning btn-block" click.delegate="stopSimulation()">
