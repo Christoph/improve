@@ -26,8 +26,20 @@ rect.grass {
   fill: #36be3c;
 }
 
+rect.grass_fresh {
+  fill: #217c25;
+}
+
 rect.dirt{
   fill: #d2c254;
+}
+
+rect.sheep {
+  fill: #f2f2f2;
+}
+
+rect.wolf{
+  fill: #554934;
 }
 
 .axis text {

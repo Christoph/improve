@@ -15,7 +15,6 @@ export class Playground {
     mating_selected = 1;
 
     data_grid = <any[]> []
-    data_FScore = <any[]> []
 
     current_filter = new Set();
 
@@ -79,6 +78,6 @@ export class Playground {
     compute() {
         // Initialize Spatial Migration Simulation
         this.world.set_params(this.mating_selected)
-        this.timeout = setInterval( () => {this.world.run_simulation(this.data_FScore)}, 200)
+        this.timeout = setInterval( () => {this.world.run_iteration()}, 200)
       }
 }
