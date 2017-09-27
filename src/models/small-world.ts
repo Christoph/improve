@@ -80,6 +80,9 @@ export class SmallWorld {
         this.host_list.push(new Sheep(new Vector(x, y+1)));
         this.host_list.push(new Sheep(new Vector(x, y-1)));
         this.host_list.push(new Sheep(new Vector(x+1, y+1)));
+        this.host_list.push(new Sheep(new Vector(x+2, y+1)));
+        this.host_list.push(new Sheep(new Vector(x+2, y)));
+        this.host_list.push(new Sheep(new Vector(x-1, y-1)));
       }
     }
 
@@ -108,178 +111,10 @@ export class SmallWorld {
 
     // Add host changes
     for (var host of this.host_list) {
+      host.position = _.cloneDeep(host.next_position);
       this.grid[host.position.x][host.position.y] = host.type;
     }
   }
-
-  get_bounded_index(index) {
-    let bounded_index = index;
-
-    if(index < 0) {
-      bounded_index = index + this.grid_length;
-    }
-    if(index >= this.grid_length) {
-      bounded_index = index - this.grid_length;
-    }
-
-    return bounded_index
-  }
-
-  pick_mating_partner(grid, i, j) {
-    let mating_i = this.get_random_int(i - this.max_mating_distance, i + this.max_mating_distance);
-    let mating_j = this.get_random_int(j - this.max_mating_distance, j + this.max_mating_distance);
-
-    mating_i = this.get_bounded_index(mating_i);
-    mating_j = this.get_bounded_index(mating_j);
-
-    return grid[mating_i][mating_j]
-  }
-
-  get_offspring(parent1, parent2) {
-      var p1 = parent1;
-      var p2 = parent2;
-      if (p1 == "A1A1" && p2 == "A1A1") {
-          return "A1A1";
-      }
-      else if ((p1 == "A1A1" && p2 == "A1A2") || (p1 == "A1A2" && p2 == "A1A1")) {
-          if (Math.random() < 0.5) {
-              return "A1A1";
-          }
-          else {
-              return "A1A2";
-          }
-      }
-      else if ((p1 == "A1A1" && p2 == "A2A2") || (p1 == "A2A2" && p2 == "A1A1")) {
-          return "A1A2";
-      }
-      else if (p1 == "A1A2" && p2 == "A1A2") {
-          var random_number = Math.random();
-          if (random_number < 0.25) {
-              return "A1A1";
-          }
-          else if (random_number > 0.75){
-              return "A2A2";
-          }
-          else {
-              return "A1A2";
-          }
-      }
-      else if ((p1 == "A1A2" && p2 == "A2A2") || (p1 == "A2A2" && p2 == "A1A2")) {
-          if (Math.random() < 0.5) {
-              return "A1A2";
-          }
-          else {
-              return "A2A2";
-          }
-      }
-      else if (p1 == "A2A2" && p2 == "A2A2") {
-          return "A2A2";
-      }
-   }
-
-   get_target_location(x, y) {
-     let nx = 0;
-     let ny = 0;
-
-     // 1: up, 2: right, 3: down, 4: left
-     let direction = this.get_random_int(1, 4);
-
-     if(direction == 1) {
-       nx = x;
-       ny = y + 1;
-     }
-     if(direction == 2) {
-       nx = x + 1;
-       ny = y;
-     }
-     if(direction == 3) {
-       nx = x;
-       ny = y - 1;
-     }
-     if(direction == 4) {
-       nx = x - 1;
-       ny = y;
-     }
-
-     return [nx, ny];
-   }
-
-  //  get_neighors(range, x, y) {
-  //    let count = [];
-  //    for(let nx = x - range;nx <= x + range; nx++) {
-  //      for(let ny = y - range;ny <= y + range; ny++) {
-  //        if(this.host_grid[nx][ny] != "empty") count++;
-  //      }
-  //    }
-  //    return count;
-  //  }
-   //
-  //  get_centroid_direction(range, x, y) {
-  //    let count = 0;
-  //    for(let nx = x - range;nx <= x + range; nx++) {
-  //      for(let ny = y - range;ny <= y + range; ny++) {
-  //        if(this.host_grid[nx][ny] != "empty") count++;
-  //      }
-  //    }
-  //    return count;
-  //  }
-   //
-  //  get_free_space(movement, x, y) {
-  //    let spaces = [];
-  //    for(let nx = x - movement;nx <= x + movement; nx++) {
-  //      for(let ny = y - movement;ny <= y + movement; ny++) {
-  //        if(this.host_grid[nx][ny] == "empty" && this.temp_host_grid[nx][ny] == "empty") spaces.push([nx, ny]);
-  //      }
-  //    }
-   //
-  //    return spaces[this.get_random_int(0, spaces.length-1)];
-  //  }
-   //
-  //  flocking_movement(x, y) {
-  //    let nx = 0;
-  //    let ny = 0;
-   //
-  //    //Separation
-  //    if(this.count_neighors(1,x,y) >= 3) {
-  //      this.move_host([x, y], this.get_free_space(1, x, y));
-  //    } // Cohesion
-  //    else {
-  //      direction = this.get_random_int(1, 4);
-  //    }
-//
-     // 1: up, 2: right, 3: down, 4: left
-    //  if(direction == 1) {
-    //    nx = x;
-    //    ny = y + 1;
-    //  }
-    //  if(direction == 2) {
-    //    nx = x + 1;
-    //    ny = y;
-    //  }
-    //  if(direction == 3) {
-    //    nx = x;
-    //    ny = y - 1;
-    //  }
-    //  if(direction == 4) {
-    //    nx = x - 1;
-    //    ny = y;
-    //  }
-  //  }
-
-  //  move_host(from, to) {
-  //    this.temp_host_grid[to[0]][to[1]] = this.host_grid[from[0]][from[1]];
-  //    this.temp_host_grid[from[0]][from[1]] = "empty";
-  //  }
-
-   simulate_sheeps(x, y) {
-     // Movement
-    //  let location = this.get_target_location(x, y);
-    //  let location = this.flocking_movement(x, y);
-
-    //  if(this.host_grid[location[0]][location[1]] == "empty" && this.temp_host_grid[location[0]][location[1]] == "empty") {
-    //    this.move_host([x, y], location);
-    //  }
-   }
 
   run_iteration() {
     // Create temporary grid for this iteration

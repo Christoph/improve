@@ -77,7 +77,7 @@ export class Playground {
 
     compute() {
         // Initialize Spatial Migration Simulation
-        this.world.run_iteration()
-        // this.timeout = setInterval( () => {this.world.run_iteration()}, 200)
+        // this.world.run_iteration()
+        this.timeout = setInterval( () => {this.world.run_iteration()}, 200)
       }
 }
