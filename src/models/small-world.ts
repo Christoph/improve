@@ -1,6 +1,7 @@
 import {autoinject} from 'aurelia-framework';
 import {Sampling} from "../helper/sampling"
 import {Wolf, Sheep} from "../hosts/hosts"
+import {Vector} from "../helper/vector"
 import * as d3 from "d3"
 import * as _ from "lodash"
 
@@ -73,12 +74,12 @@ export class SmallWorld {
       if(this.landscape_grid[x][y] == "grass_fresh") {
         found = true;
 
-        this.host_list.push(new Sheep([x, y]));
-        this.host_list.push(new Sheep([x-1, y]));
-        this.host_list.push(new Sheep([x+1, y]));
-        this.host_list.push(new Sheep([x, y-1]));
-        this.host_list.push(new Sheep([x, y+1]));
-        this.host_list.push(new Sheep([x+1, y+1]));
+        this.host_list.push(new Sheep(new Vector(x, y)));
+        this.host_list.push(new Sheep(new Vector(x-1, y)));
+        this.host_list.push(new Sheep(new Vector(x+1, y)));
+        this.host_list.push(new Sheep(new Vector(x, y+1)));
+        this.host_list.push(new Sheep(new Vector(x, y-1)));
+        this.host_list.push(new Sheep(new Vector(x+1, y+1)));
       }
     }
 
@@ -89,7 +90,7 @@ export class SmallWorld {
 
     // Add hosts
     for (var host of this.host_list) {
-      this.grid[host.position[0]][host.position[1]] = host.type;
+      this.grid[host.position.x][host.position.y] = host.type;
     }
   }
 
@@ -103,11 +104,11 @@ export class SmallWorld {
 
       // Add landscape changes
       this.grid.push(_.clone(this.landscape_grid[i]))
+    }
 
-      // Add host changes
-      for (var host of this.host_list) {
-        this.grid[host.position[0]][host.position[0]] = host.type;
-      }
+    // Add host changes
+    for (var host of this.host_list) {
+      this.grid[host.position.x][host.position.y] = host.type;
     }
   }
 
@@ -284,18 +285,9 @@ export class SmallWorld {
     // Create temporary grid for this iteration
     this.temp_landscape_grid = _.cloneDeep(this.landscape_grid);
 
-    // Go through all points
-    for(let x = 0; x < this.grid_length; x++) {
-      for(let y = 0; y < this.grid_length; y++) {
-        // if(this.host_grid[x][y] == "sheep") {
-        //   this.simulate_sheeps(x, y);
-        // }
-        // // Select mating partner
-        // let mating_partner = this.pick_mating_partner(this.grid,i, j);
-        //
-        // // Return offspring genotype
-        // temp_grid[i][j] = this.get_offspring(this.grid[i][j], mating_partner);
-      }
+    // Go through all hosts
+    for(let host of this.host_list) {
+      host.simulate(this.grid, this.host_list);
     }
 
     // Update grid
