@@ -1,5 +1,6 @@
 import {autoinject} from 'aurelia-framework';
 import {Sampling} from "../helper/sampling"
+import {Wolf, Sheep} from "../hosts/hosts"
 import * as d3 from "d3"
 import * as _ from "lodash"
 
@@ -14,24 +15,14 @@ export class SmallWorld {
   grid_length = 100;
   landscape_grid = [];
   temp_landscape_grid = [];
-  host_grid = [];
-  temp_host_grid = [];
+  host_list = [];
 
   // Global params
-  max_mating_distance;
-
-  params = [];
-  time_range = [];
-
-  p = 0.8;
+  max_mating_distance = 1;
   simulation_iterations = 0;
 
   constructor(private grid) {
       this.noise = new Noise()
-  }
-
-  set_params(mating_selected) {
-    this.max_mating_distance = mating_selected;
   }
 
   get_random_int(min, max) {
@@ -39,12 +30,14 @@ export class SmallWorld {
   }
 
   init_simulation() {
+    // Reset simulation variables
     this.grid.length = 0;
     this.simulation_iterations = 0;
+
+    // Create noisemap for the landscape
     let noise_map = [];
     this.noise.seed(Math.random());
 
-    // Create noisemap for the landscape
     for(let i = 0; i < this.grid_length; i++) {
       let temp = []
       for(let j = 0; j < this.grid_length; j++) {
@@ -56,7 +49,6 @@ export class SmallWorld {
     // Initilize landscape and host grids
     for(let i = 0; i < this.grid_length; i++) {
       let temp_landscape = []
-      let temp_host = []
 
       for(let j = 0; j < this.grid_length; j++) {
         // Landscape
@@ -68,62 +60,53 @@ export class SmallWorld {
           value = "dirt"
         }
         temp_landscape[j] = value;
-
-        // Hosts
-        temp_host[j] = "empty"
       }
       this.landscape_grid.push(temp_landscape)
-      this.host_grid.push(temp_host)
     }
 
-    // Add initial sheep
+    // Add initial hosts
     let found = false;
+    // Find grass area
     while(!found) {
       let x = this.get_random_int(0,this.grid_length-1);
       let y = this.get_random_int(0,this.grid_length-1)
       if(this.landscape_grid[x][y] == "grass_fresh") {
         found = true;
 
-        this.host_grid[x][y] = "sheep"
-        this.host_grid[x-1][y] = "sheep"
-        this.host_grid[x+1][y] = "sheep"
-        this.host_grid[x][y-1] = "sheep"
-        this.host_grid[x][y+1] = "sheep"
-        this.host_grid[x+1][y+1] = "sheep"
+        this.host_list.push(new Sheep([x, y]));
+        this.host_list.push(new Sheep([x-1, y]));
+        this.host_list.push(new Sheep([x+1, y]));
+        this.host_list.push(new Sheep([x, y-1]));
+        this.host_list.push(new Sheep([x, y+1]));
+        this.host_list.push(new Sheep([x+1, y+1]));
       }
     }
 
     // Add initial data to grid
     for(let i = 0; i < this.grid_length; i++) {
       this.grid.push(_.clone(this.landscape_grid[i]))
+    }
 
-      // Add hosts
-      for(let j = 0; j < this.grid_length; j++) {
-        if(this.host_grid[i][j] != "empty") {
-          this.grid[i][j] = this.host_grid[i][j];
-        }
-      }
+    // Add hosts
+    for (var host of this.host_list) {
+      this.grid[host.position[0]][host.position[1]] = host.type;
     }
   }
 
   update_grid() {
     this.landscape_grid.length = 0;
-    this.host_grid.length = 0;
     this.grid.length = 0;
 
     for(let i = 0; i < this.grid_length; i++) {
       // Copy temp to working grids
       this.landscape_grid.push(_.clone(this.temp_landscape_grid[i]))
-      this.host_grid.push(_.clone(this.temp_host_grid[i]))
 
       // Add landscape changes
       this.grid.push(_.clone(this.landscape_grid[i]))
 
       // Add host changes
-      for(let j = 0; j < this.grid_length; j++) {
-        if(this.host_grid[i][j] != "empty") {
-          this.grid[i][j] = this.host_grid[i][j];
-        }
+      for (var host of this.host_list) {
+        this.grid[host.position[0]][host.position[0]] = host.type;
       }
     }
   }
@@ -193,21 +176,120 @@ export class SmallWorld {
       }
    }
 
-   simulate_sheeps() {
+   get_target_location(x, y) {
+     let nx = 0;
+     let ny = 0;
 
+     // 1: up, 2: right, 3: down, 4: left
+     let direction = this.get_random_int(1, 4);
+
+     if(direction == 1) {
+       nx = x;
+       ny = y + 1;
+     }
+     if(direction == 2) {
+       nx = x + 1;
+       ny = y;
+     }
+     if(direction == 3) {
+       nx = x;
+       ny = y - 1;
+     }
+     if(direction == 4) {
+       nx = x - 1;
+       ny = y;
+     }
+
+     return [nx, ny];
+   }
+
+  //  get_neighors(range, x, y) {
+  //    let count = [];
+  //    for(let nx = x - range;nx <= x + range; nx++) {
+  //      for(let ny = y - range;ny <= y + range; ny++) {
+  //        if(this.host_grid[nx][ny] != "empty") count++;
+  //      }
+  //    }
+  //    return count;
+  //  }
+   //
+  //  get_centroid_direction(range, x, y) {
+  //    let count = 0;
+  //    for(let nx = x - range;nx <= x + range; nx++) {
+  //      for(let ny = y - range;ny <= y + range; ny++) {
+  //        if(this.host_grid[nx][ny] != "empty") count++;
+  //      }
+  //    }
+  //    return count;
+  //  }
+   //
+  //  get_free_space(movement, x, y) {
+  //    let spaces = [];
+  //    for(let nx = x - movement;nx <= x + movement; nx++) {
+  //      for(let ny = y - movement;ny <= y + movement; ny++) {
+  //        if(this.host_grid[nx][ny] == "empty" && this.temp_host_grid[nx][ny] == "empty") spaces.push([nx, ny]);
+  //      }
+  //    }
+   //
+  //    return spaces[this.get_random_int(0, spaces.length-1)];
+  //  }
+   //
+  //  flocking_movement(x, y) {
+  //    let nx = 0;
+  //    let ny = 0;
+   //
+  //    //Separation
+  //    if(this.count_neighors(1,x,y) >= 3) {
+  //      this.move_host([x, y], this.get_free_space(1, x, y));
+  //    } // Cohesion
+  //    else {
+  //      direction = this.get_random_int(1, 4);
+  //    }
+//
+     // 1: up, 2: right, 3: down, 4: left
+    //  if(direction == 1) {
+    //    nx = x;
+    //    ny = y + 1;
+    //  }
+    //  if(direction == 2) {
+    //    nx = x + 1;
+    //    ny = y;
+    //  }
+    //  if(direction == 3) {
+    //    nx = x;
+    //    ny = y - 1;
+    //  }
+    //  if(direction == 4) {
+    //    nx = x - 1;
+    //    ny = y;
+    //  }
+  //  }
+
+  //  move_host(from, to) {
+  //    this.temp_host_grid[to[0]][to[1]] = this.host_grid[from[0]][from[1]];
+  //    this.temp_host_grid[from[0]][from[1]] = "empty";
+  //  }
+
+   simulate_sheeps(x, y) {
+     // Movement
+    //  let location = this.get_target_location(x, y);
+    //  let location = this.flocking_movement(x, y);
+
+    //  if(this.host_grid[location[0]][location[1]] == "empty" && this.temp_host_grid[location[0]][location[1]] == "empty") {
+    //    this.move_host([x, y], location);
+    //  }
    }
 
   run_iteration() {
     // Create temporary grid for this iteration
-    this.temp_host_grid = _.cloneDeep(this.host_grid);
     this.temp_landscape_grid = _.cloneDeep(this.landscape_grid);
 
     // Go through all points
     for(let x = 0; x < this.grid_length; x++) {
       for(let y = 0; y < this.grid_length; y++) {
-        if(this.landscape_grid[x][y] == "sheep") {
-          this.simulate_sheeps();
-        }
+        // if(this.host_grid[x][y] == "sheep") {
+        //   this.simulate_sheeps(x, y);
+        // }
         // // Select mating partner
         // let mating_partner = this.pick_mating_partner(this.grid,i, j);
         //
