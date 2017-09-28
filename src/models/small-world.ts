@@ -93,7 +93,7 @@ export class SmallWorld {
 
     // Add hosts
     for (var host of this.host_list) {
-      this.grid[host.position.x][host.position.y] = host.type;
+      this.grid[this.get_bounded_index(this.grid.length, host.position.x)][this.get_bounded_index(this.grid.length, host.position.y)] = host.type;
     }
   }
 
@@ -122,7 +122,7 @@ export class SmallWorld {
 
     // Go through all hosts
     for(let host of this.host_list) {
-      host.simulate(this.grid, this.host_list);
+      host.simulate(this.temp_landscape_grid, this.host_list);
     }
 
     // Update grid
@@ -130,5 +130,18 @@ export class SmallWorld {
 
     // Increase simulation counter
     this.simulation_iterations++;
+  }
+
+  get_bounded_index(grid_length, index) {
+    let bounded_index = index;
+
+    if(index < 0) {
+      bounded_index = index + grid_length;
+    }
+    if(index >= grid_length) {
+      bounded_index = index - grid_length;
+    }
+
+    return bounded_index
   }
 }

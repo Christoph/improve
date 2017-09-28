@@ -2,7 +2,7 @@ export class Vector {
   constructor(public x, public y) {
   }
 
-  add(v: Vector) {
+  add(v: Vector|number) {
     if (v instanceof Vector) {
       this.x = this.x + v.x
       this.y = this.y + v.y;
@@ -10,11 +10,14 @@ export class Vector {
       return this
     }
     else {
-      return new Vector(this.x + v, this.y + v);
+      this.x = this.x + v
+      this.y = this.y + v
+
+      return this
     }
   }
 
-  subtract(v: Vector) {
+  subtract(v: Vector|number) {
     if (v instanceof Vector) {
       this.x = this.x - v.x
       this.y = this.y - v.y
@@ -22,11 +25,14 @@ export class Vector {
       return this
     }
     else {
-      return new Vector(this.x - v, this.y - v);
+      this.x = this.x - v
+      this.y = this.y - v
+
+      return this
     }
   }
 
-  multiply(v: Vector) {
+  multiply(v: Vector|number) {
     if (v instanceof Vector) {
       this.x = this.x * v.x
       this.y = this.y * v.y
@@ -34,11 +40,14 @@ export class Vector {
       return this
     }
     else {
-      return new Vector(this.x * v, this.y * v);
+      this.x = this.x * v
+      this.y = this.y * v
+
+      return this
     }
   }
 
-  divide(v) {
+  divide(v: Vector|number) {
     if (v instanceof Vector) {
       this.x = this.x / v.x
       this.y = this.y / v.y
@@ -65,6 +74,8 @@ export class Vector {
   limit(max_length) {
     this.x = (max_length/this.length())*this.x;
     this.y = (max_length/this.length())*this.y;
+
+    return this
   }
 
   length() {
