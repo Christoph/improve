@@ -135,7 +135,7 @@ export class Sheep {
       counter++;
     })
 
-    return this.move_to(mean.divide(counter)).multiply(nearest_distance)
+    return this.move_to(mean.divide(counter)).multiply(nearest_distance+1)
   }
 
   hungry() {
