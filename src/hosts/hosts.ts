@@ -7,12 +7,21 @@ export class Sheep {
   private herding_range = 4;
   private desired_separation = 3;
   private max_speed = 1;
+  private mating_threshold = 20;
+  private maximum_age = 90;
 
+  private dead = false;
+  private age = 1;
   private saturation = 2;
+  private willingness = 10;
   private neighbors = new Map();
   private surroundings = [];
   private velocity;
   private next_position;
+
+  private mate_weight = 1;
+  private flock_weight = 1;
+  private feed_weight = 1;
 
   constructor(private position: Vector) {
     // Initialize next position
@@ -33,12 +42,22 @@ export class Sheep {
   // Basic decision function
   public simulate(grid, host_list) {
     this.look(grid, host_list);
-    this.decide(grid);
-    this.update_host();
+    this.decide(grid, host_list);
+    this.update_host(host_list);
   }
 
-  update_host() {
+  update_host(host_list) {
     this.saturation--;
+    this.willingness++;
+    this.age++;
+
+    if(this.saturation <= 0) {
+      this.dead = true;
+    }
+
+    if(this.age > this.maximum_age) {
+      this.dead = true;
+    }
   }
 
   look(grid, host_list) {
@@ -73,12 +92,17 @@ export class Sheep {
     }
   }
 
-  decide(grid) {
+  decide(grid, host_list) {
     let sheeps_around = [];
     let predators_around = [];
 
+    this.mate_weight = 1;
+    this.flock_weight = 1;
+    this.feed_weight = 1;
+
     let flock_movement: Vector;
     let feed_movement: Vector;
+    let mate_movement: Vector;
     let total_movement: Vector;
 
     // Analyse surroundings
@@ -93,33 +117,78 @@ export class Sheep {
 
     // decide based on importance
     if(predators_around.length > 0) {
+      this.feed_weight = 0;
+      this.mate_weight = 0;
     }
     else if(this.hungry()) {
       this.eat(grid);
     }
+    else if(this.willingness >= this.mating_threshold) {
+      this.mate_weight = 5;
+      this.feed_weight = 3;
+      this.mate(sheeps_around, host_list);
+    }
 
     flock_movement = this.flock(sheeps_around)
     feed_movement = this.feed(this.surroundings)
+    mate_movement = this.find_partner(sheeps_around)
 
-    flock_movement.multiply(0.4);
-    feed_movement.multiply(0.6);
+    flock_movement.multiply(this.flock_weight);
+    feed_movement.multiply(this.feed_weight);
+    mate_movement.multiply(this.mate_weight)
 
-    // let saturation_factor = this.saturation/10;
-    // flock_movement.multiply(1-saturation_factor);
-    // feed_movement.multiply(saturation_factor);
+    total_movement = flock_movement.add(feed_movement).add(mate_movement)
 
-    total_movement = flock_movement.add(feed_movement).divide(2)
-
-    if(this.saturation > 0) this.movement(grid, total_movement);
+    if(this.saturation > 0) this.movement(grid, total_movement.divide(3));
   }
 
   eat(grid) {
-    if(grid[this.position.x][this.position.y] == "grass_fresh") {
+    let type = grid[this.position.x][this.position.y];
+
+    if(type == "grass_fresh") {
       this.saturation += 5;
       grid[this.position.x][this.position.y] = "grass"
     }
-    else if(grid[this.position.x][this.position.y] == "grass") {
+    else if(type == "grass") {
       this.saturation += 2;
+    }
+  }
+
+  find_partner(neighbors) {
+    let distance = this.vision;
+    let available_partners = neighbors.filter(cell => cell.saturation > 5);
+    let partner;
+
+    available_partners.forEach(n => {
+      if(this.position.distance(n.position) < distance) {
+        distance = this.position.distance(n.position);
+        partner = n;
+      }
+    })
+
+    if(partner instanceof Sheep) {
+      return this.move_to(partner.position)
+    }
+    else {
+      return this.move_to(this.position)
+    }
+
+  }
+
+  mate(neighbors, host_list) {
+    for(let i = 0; i < neighbors.length; i++) {
+      let n = neighbors[i]
+      if(this.position.distance(n.position) < 2 && n.willingness >= this.mating_threshold) {
+        // Create new sheep
+        host_list.push(new Sheep(new Vector(this.position.x, this.position.y)))
+
+        // Reset willingsness
+        this.willingness = 0;
+        n.willingness = 0;
+
+        //Break out of loop
+        break;
+      }
     }
   }
 
@@ -213,11 +282,11 @@ export class Sheep {
   }
 
   move_to(target : Vector) {
-    target.subtract(this.position);
-    let distance = target.length();
+    let target_position = target.clone().subtract(this.position);
+    let distance = target_position.length();
 
     if(distance > 0) {
-      return target.unit().subtract(this.velocity)
+      return target_position.unit().subtract(this.velocity)
     }
     else {
       return new Vector(0, 0)

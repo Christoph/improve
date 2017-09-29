@@ -110,9 +110,18 @@ export class SmallWorld {
     }
 
     // Add host changes
-    for (var host of this.host_list) {
-      host.position = _.cloneDeep(host.next_position);
-      this.grid[host.position.x][host.position.y] = host.type;
+    for(var i = this.host_list.length -1; i >= 0 ; i--){
+      // Remove dead hosts
+      if(this.host_list[i].dead){
+          this.host_list.splice(i, 1);
+      }
+    }
+
+    // Add host changes
+    for(var i = this.host_list.length -1; i >= 0 ; i--){
+      // Update host position
+      this.host_list[i].position = _.cloneDeep(this.host_list[i].next_position);
+      this.grid[this.host_list[i].position.x][this.host_list[i].position.y] = this.host_list[i].type;
     }
   }
 
