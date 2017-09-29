@@ -115,13 +115,11 @@ export class SmallWorld {
       if(this.host_list[i].dead){
           this.host_list.splice(i, 1);
       }
-    }
-
-    // Add host changes
-    for(var i = this.host_list.length -1; i >= 0 ; i--){
-      // Update host position
-      this.host_list[i].position = _.cloneDeep(this.host_list[i].next_position);
-      this.grid[this.host_list[i].position.x][this.host_list[i].position.y] = this.host_list[i].type;
+      else {
+        // Update host position
+        this.host_list[i].position = _.cloneDeep(this.host_list[i].next_position);
+        this.grid[this.host_list[i].position.x][this.host_list[i].position.y] = this.host_list[i].type;
+      }
     }
   }
 
