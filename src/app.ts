@@ -14,7 +14,6 @@ export class App {
         { route: "spatialsir/", moduleId: "spatial_sir/epidemics", nav: true, title: "Spatial - SIR", name: "sir" },
           { route: "drift/", moduleId: "drift/drift", nav: true, title: "Genetic Drift", name: "drift" },
           { route: "migration/", moduleId: "spatial_migration/migration", nav: true, title: "Spatial Migration", name: "migration" },
-          { route: "playground/", moduleId: "simulation/playground", nav: true, title: "Simulation Playground", name: "playground" }
       ]);
 
       this.router = router;
